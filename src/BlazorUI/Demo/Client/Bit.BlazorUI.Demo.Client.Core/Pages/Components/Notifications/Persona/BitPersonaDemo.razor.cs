@@ -13,6 +13,15 @@ public partial class BitPersonaDemo
         },
         new()
         {
+            Name = "ActionIcon",
+            Type = "BitIconInfo?",
+            DefaultValue = "null",
+            Description = "Icon for the icon button of the custom action using BitIconInfo. Takes precedence over ActionIconName when both are set.",
+            LinkType = LinkType.Link,
+            Href = "#bit-icon-info",
+        },
+        new()
+        {
             Name = "ActionIconName",
             Type = "string?",
             DefaultValue = "",
@@ -157,9 +166,18 @@ public partial class BitPersonaDemo
         new()
         {
             Name = "PresenceIcons",
+            Type = "Dictionary<BitPersonaPresence, BitIconInfo>?",
+            DefaultValue = "null",
+            Description = "The icons to be used for the presence status with BitIconInfo. Takes precedence over PresenceIconNames when both are set.",
+            LinkType = LinkType.Link,
+            Href = "#bit-icon-info",
+        },
+        new()
+        {
+            Name = "PresenceIconNames",
             Type = "Dictionary<BitPersonaPresence, string>?",
             DefaultValue = "null",
-            Description = "The icons to be used for the presence status.",
+            Description = "The icon names to be used for the presence status.",
         },
         new()
         {
@@ -385,6 +403,38 @@ public partial class BitPersonaDemo
                     DefaultValue = "null",
                     Description = "Custom CSS classes/styles for the optional text container of the BitPersona."
                 }
+            ]
+        },
+        new()
+        {
+            Id = "bit-icon-info",
+            Title = "BitIconInfo",
+            Parameters =
+            [
+               new()
+               {
+                   Name = "Name",
+                   Type = "string?",
+                   DefaultValue = "null",
+                   Description = @"Gets or sets the name of the icon. 
+                                   For external icons, this can be the full CSS class name if ""BaseClass"" and ""Prefix"" are empty."
+               },
+               new()
+               {
+                   Name = "BaseClass",
+                   Type = "string?",
+                   DefaultValue = "null",
+                   Description = @"Gets or sets the base CSS class for the icon.
+                                   For external icon libraries like FontAwesome, you might set this to ""fa"" or leave empty."
+               },
+               new()
+               {
+                   Name = "Prefix",
+                   Type = "string?",
+                   DefaultValue = "null",
+                   Description = @"Gets or sets the CSS class prefix used before the icon name.
+                                   For external icon libraries, you might set this to ""fa-"" or leave empty."
+               },
             ]
         }
     ];
@@ -662,13 +712,23 @@ public partial class BitPersonaDemo
     private int actionClickCount = 0;
     private bool isDetailsShown = true;
 
-    private Dictionary<BitPersonaPresence, string> _icons = new()
+    private readonly Dictionary<BitPersonaPresence, BitIconInfo> _icons = new()
     {
-        {BitPersonaPresence.Offline, BitIconName.UnavailableOffline},
-        {BitPersonaPresence.Online, BitIconName.SkypeCheck},
-        {BitPersonaPresence.Away, BitIconName.SkypeClock},
-        {BitPersonaPresence.Dnd, BitIconName.SkypeMinus},
-        {BitPersonaPresence.Blocked, BitIconName.BlockedSolid},
-        {BitPersonaPresence.Busy, BitIconName.Blocked2Solid}
+        { BitPersonaPresence.Offline, BitIconInfo.Bi("wifi-off") },
+        { BitPersonaPresence.Online, BitIconInfo.Bi("check-circle-fill") },
+        { BitPersonaPresence.Away, BitIconInfo.Bi("clock-fill") },
+        { BitPersonaPresence.Dnd, BitIconInfo.Bi("dash-circle-fill") },
+        { BitPersonaPresence.Blocked, BitIconInfo.Bi("ban") },
+        { BitPersonaPresence.Busy, BitIconInfo.Bi("exclamation-circle-fill") },
+    };
+
+    private readonly Dictionary<BitPersonaPresence, string> _iconNames = new()
+    {
+        { BitPersonaPresence.Offline, BitIconName.UnavailableOffline },
+        { BitPersonaPresence.Online, BitIconName.SkypeCheck },
+        { BitPersonaPresence.Away, BitIconName.SkypeClock },
+        { BitPersonaPresence.Dnd, BitIconName.SkypeMinus },
+        { BitPersonaPresence.Blocked, BitIconName.BlockedSolid },
+        { BitPersonaPresence.Busy, BitIconName.Blocked2Solid },
     };
 }

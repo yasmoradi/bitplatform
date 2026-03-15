@@ -16,9 +16,22 @@ public partial class BitPersona : BitComponentBase
     [Parameter] public string ActionButtonTitle { get; set; } = "Edit image";
 
     /// <summary>
+    /// Icon for the icon button of the custom action.
+    /// </summary>
+    /// <remarks>
+    /// When both <see cref="ActionIcon"/> and <see cref="ActionIconName"/> are provided, <see cref="ActionIcon"/> takes precedence.
+    /// Use this property when you need to configure an external or custom icon (for example, when using a custom icon font or SVG).
+    /// </remarks>
+    [Parameter] public BitIconInfo? ActionIcon { get; set; }
+
+    /// <summary>
     /// Icon name for the icon button of the custom action.
     /// </summary>
-    [Parameter] public string? ActionIconName { get; set; } = "Edit";
+    /// <remarks>
+    /// This is a convenience property for specifying an icon from the built-in icon set.
+    /// If <see cref="ActionIcon"/> is specified, this property is ignored and the value of <see cref="ActionIcon"/> will be used instead.
+    /// </remarks>
+    [Parameter] public string? ActionIconName { get; set; }
 
     /// <summary>
     /// Optional Custom template for the custom action element.
@@ -123,9 +136,45 @@ public partial class BitPersona : BitComponentBase
     [Parameter] public BitPersonaPresence Presence { get; set; }
 
     /// <summary>
-    /// The icons to be used for the presence status.
+    /// The icons to be used for the presence status with <see cref="BitIconInfo"/>.
     /// </summary>
-    [Parameter] public Dictionary<BitPersonaPresence, string>? PresenceIcons { get; set; }
+    /// <remarks>
+    /// When both <see cref="PresenceIcons"/> and <see cref="PresenceIconNames"/> are provided, entries in
+    /// <see cref="PresenceIcons"/> take precedence for the same <see cref="BitPersonaPresence"/> key.
+    /// Use this dictionary when you need to configure presence icons using full <see cref="BitIconInfo"/> metadata
+    /// (for example, to use custom icon sources or other advanced icon settings supported by <see cref="BitIconInfo"/>).
+    /// <para>
+    /// Example:
+    /// <code>
+    /// PresenceIcons = new()
+    /// {
+    ///     [BitPersonaPresence.Online] = new BitIconInfo { Name = "SkypeCircleCheck" },
+    ///     [BitPersonaPresence.Offline] = new BitIconInfo { Name = "SkypeCircleMinus" }
+    /// };
+    /// </code>
+    /// </para>
+    /// </remarks>
+    [Parameter] public Dictionary<BitPersonaPresence, BitIconInfo>? PresenceIcons { get; set; }
+
+    /// <summary>
+    /// The icon names to be used for the presence status.
+    /// </summary>
+    /// <remarks>
+    /// This dictionary is intended for simple scenarios where built-in icon names are sufficient.
+    /// For any <see cref="BitPersonaPresence"/> value that also exists in <see cref="PresenceIcons"/>,
+    /// the corresponding entry in <see cref="PresenceIconNames"/> is ignored.
+    /// <para>
+    /// Example:
+    /// <code>
+    /// PresenceIconNames = new()
+    /// {
+    ///     [BitPersonaPresence.Online] = "SkypeCircleCheck",
+    ///     [BitPersonaPresence.Away] = "SkypeCircleClock"
+    /// };
+    /// </code>
+    /// </para>
+    /// </remarks>
+    [Parameter] public Dictionary<BitPersonaPresence, string>? PresenceIconNames { get; set; }
 
     /// <summary>
     /// Presence title to be shown as a tooltip on hover over the presence icon.
@@ -287,16 +336,18 @@ public partial class BitPersona : BitComponentBase
         return FormattableString.Invariant($"width:{presentationSize}px;height:{presentationSize}px;{position}{Styles?.Presence?.Trim(';')}");
     }
 
-    private string? GetPresentationIcon()
+    private BitIconInfo? GetPresentationIcon()
     {
         if (Size is BitPersonaSize.Size8 or BitPersonaSize.Size24 or BitPersonaSize.Size32) return null;
 
-        if (PresenceIcons?.ContainsKey(Presence) ?? false)
-        {
-            return PresenceIcons[Presence];
-        }
+        return PresenceIcons?.TryGetValue(Presence, out var icon) is true ? icon : null;
+    }
 
-        return null;
+    private string? GetPresentationIconName()
+    {
+        if (Size is BitPersonaSize.Size8 or BitPersonaSize.Size24 or BitPersonaSize.Size32) return null;
+
+        return PresenceIconNames?.TryGetValue(Presence, out var iconName) is true ? iconName : null;
     }
 
     private string? GetCoinClass()
