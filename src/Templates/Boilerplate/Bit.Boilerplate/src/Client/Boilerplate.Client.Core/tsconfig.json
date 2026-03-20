@@ -3,9 +3,15 @@
     "compilerOptions": {
         "strict": true,
         "target": "ES2019",
-        "module": "es2015",
-        "noImplicitAny": true,
+        "module": "ESNext",
+        "moduleResolution": "bundler",
+        "verbatimModuleSyntax": true,
+        "resolveJsonModule": true,
         "lib": [ "DOM", "ESNext" ],
-        "moduleResolution": "node"
-    }
+        "esModuleInterop": true,
+        "skipLibCheck": true,
+        "forceConsistentCasingInFileNames": true
+    },
+    "include": [ "Scripts" ],
+    "exclude": [ "node_modules" ]
 }
