@@ -1,4 +1,4 @@
-namespace Bit.BlazorUI.Demo.Client.Core.Pages.Components.Inputs.Dropdown;
+﻿namespace Bit.BlazorUI.Demo.Client.Core.Pages.Components.Inputs.Dropdown;
 
 public partial class _BitDropdownItemDemo
 {
@@ -800,26 +800,45 @@ private List<BitDropdownItem<string>> comboBoxItems = new()
              CaretDownIcon=""@BitIconInfo.Css(""fa-solid fa-circle-chevron-down"")""
              Items=""GetBasicItems()""
              DefaultValue=""@string.Empty""
-             Placeholder=""Select an item""
-             TItem=""BitDropdownItem<string>"" TValue=""string"" />
+             Placeholder=""Select an item"" />
+
+<BitDropdown Label=""Clear button icon (external)""
+             ShowClearButton
+             ClearButtonIcon=""@BitIconInfo.Css(""fa-solid fa-circle-xmark"")""
+             Items=""GetBasicItems()""
+             DefaultValue=""f-app""
+             Placeholder=""Select an item"" />
+
+<BitDropdown Label=""Chips remove icon (external)""
+             Chips
+             MultiSelect
+             ChipsRemoveIcon=""@BitIconInfo.Css(""bi bi-x-circle"")""
+             Items=""GetBasicItems()""
+             DefaultValues=""@([""f-app"", ""f-ban""])""
+             Placeholder=""Select items"" />
+
+<BitDropdown Label=""Search box icons (external)""
+             ShowSearchBox
+             SearchBoxIcon=""@BitIconInfo.Css(""fa-solid fa-magnifying-glass"")""
+             SearchBoxClearIcon=""@BitIconInfo.Css(""fa-solid fa-circle-xmark"")""
+             Items=""GetBasicItems()""
+             DefaultValue=""@string.Empty""
+             Placeholder=""Select an item"" />
 
 <BitDropdown Label=""Item icons (IconName - Fluent UI)""
              Items=""GetExternalIconItems()""
              DefaultValue=""@string.Empty""
-             Placeholder=""Select an item""
-             TItem=""BitDropdownItem<string>"" TValue=""string"" />
+             Placeholder=""Select an item"" />
 
 <BitDropdown Label=""Item icons (Icon - FontAwesome)""
              Items=""GetExternalIconFaItems()""
              DefaultValue=""@string.Empty""
-             Placeholder=""Select an item""
-             TItem=""BitDropdownItem<string>"" TValue=""string"" />
+             Placeholder=""Select an item"" />
 
 <BitDropdown Label=""Item icons (Icon - Bootstrap Icons)""
              Items=""GetExternalIconBiItems()""
              DefaultValue=""@string.Empty""
-             Placeholder=""Select an item""
-             TItem=""BitDropdownItem<string>"" TValue=""string"" />";
+             Placeholder=""Select an item"" />";
     private readonly string example15CsharpCode = @"
 private List<BitDropdownItem<string>> GetBasicItems() => new()
 {
