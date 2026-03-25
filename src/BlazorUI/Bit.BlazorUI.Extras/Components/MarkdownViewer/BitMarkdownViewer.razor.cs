@@ -18,10 +18,33 @@ public partial class BitMarkdownViewer : BitComponentBase
 
 
     /// <summary>
+    /// The fully qualified JavaScript function identifier to invoke as JavaScript middleware after parsing.
+    /// The string should reference a global JS function (e.g. <c>"myApp.sanitizeHtml"</c>) that accepts 
+    /// an HTML string and returns the processed HTML string.
+    /// JavaScript middleware is skipped during server-side prerendering.
+    /// </summary>
+    [Parameter, CallOnSet(nameof(OnMarkdownOrMiddlewareSet))]
+    public string? JsMiddlewareIdentifier { get; set; }
+
+    /// <summary>
     /// The Markdown string value to render as an html element.
     /// </summary>
-    [Parameter, CallOnSet(nameof(OnMarkdownSet))]
+    [Parameter, CallOnSet(nameof(OnMarkdownOrMiddlewareSet))]
     public string? Markdown { get; set; }
+
+    /// <summary>
+    /// The C# function to run after parsing markdown and before rendering HTML.
+    /// The middleware receives the parsed HTML string and returns the processed HTML string.
+    /// C# middleware is applied after JavaScript middleware.
+    /// </summary>
+    [Parameter, CallOnSet(nameof(OnMarkdownOrMiddlewareSet))]
+    public Func<string, Task<string>>? Middleware { get; set; }
+
+    /// <summary>
+    /// Disables parse and render of the markdown content in the prerendering phase.
+    /// </summary>
+    [Parameter]
+    public bool NoPrerender { get; set; }
 
     /// <summary>
     /// A callback that is called before starting to parse the markdown.
@@ -63,7 +86,7 @@ public partial class BitMarkdownViewer : BitComponentBase
 
 
 
-    private void OnMarkdownSet()
+    private void OnMarkdownOrMiddlewareSet()
     {
         if (IsRendered is false) return;
 
@@ -76,7 +99,7 @@ public partial class BitMarkdownViewer : BitComponentBase
 
         try
         {
-            _html = await _markdownService.Parse(Markdown, _cts.Token);
+            _html = await _markdownService.Parse(Markdown, JsMiddlewareIdentifier, Middleware, NoPrerender, _cts.Token);
         }
         catch
         {

@@ -33,7 +33,7 @@ var sqlDatabase = builder.AddSqlServer("sqlserver")
 
 //#elif (database == "PostgreSql")
 var postgresDatabase = builder.AddPostgres("postgresserver")
-        .WithPgAdmin(config => config.WithVolume("/var/lib/pgadmin/Boilerplate/data"))
+        .WithPgAdmin()
         .WithV18DataVolume()
         .WithOptimizedSetup()
         .WithImage("pgvector/pgvector", "pg18") // pgvector supports embedded vector search.
@@ -41,12 +41,12 @@ var postgresDatabase = builder.AddPostgres("postgresserver")
 
 //#elif (database == "MySql")
 var mySqlDatabase = builder.AddMySql("mysqlserver")
-        .WithPhpMyAdmin(config => config.WithVolume("/var/lib/phpMyAdmin/Boilerplate/data"))
+        .WithPhpMyAdmin()
         .WithDataVolume()
         .AddDatabase("mysqldb");
 //#elif (database == "Sqlite")
 var sqlite = builder.AddSqlite("sqlite", databaseFileName: "BoilerplateDb.db")
-    .WithSqliteWeb(config => config.WithVolume("/var/lib/sqliteweb/Boilerplate/data"));
+    .WithSqliteWeb();
 //#endif
 //#if (filesStorage == "AzureBlobStorage")
 var azureBlobStorage = builder.AddAzureStorage("storage")
@@ -106,6 +106,7 @@ serverApiProject.WithReference(s3Storage);
 serverApiProject.WithReference(keycloak);
 //#if (redis == true)
 serverApiProject.WithReference(redisCache).WaitFor(redisCache);
+serverWebProject.WithReference(redisCache).WaitFor(redisCache);
 serverApiProject.WithReference(redisPersistent).WaitFor(redisPersistent);
 //#endif
 //#else

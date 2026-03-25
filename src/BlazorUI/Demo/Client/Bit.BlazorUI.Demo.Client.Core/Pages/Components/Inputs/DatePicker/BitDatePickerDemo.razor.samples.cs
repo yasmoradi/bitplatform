@@ -1,4 +1,4 @@
-﻿namespace Bit.BlazorUI.Demo.Client.Core.Pages.Components.Inputs.DatePicker;
+namespace Bit.BlazorUI.Demo.Client.Core.Pages.Components.Inputs.DatePicker;
 
 public partial class BitDatePickerDemo
 {
@@ -231,6 +231,54 @@ private void HandleValidSubmit() { }
 private void HandleInvalidSubmit() { }";
 
     private readonly string example15RazorCode = @"
+<link rel=""stylesheet"" href=""https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css"" />
+
+<BitDatePicker Label=""Icon (string)"" Icon=""@(""fa-solid fa-calendar-days"")"" />
+
+<BitDatePicker Label=""BitIconInfo.Css"" Icon=""@BitIconInfo.Css(""fa-solid fa-calendar-days"")"" />
+
+<BitDatePicker Label=""BitIconInfo.Fa"" Icon=""@BitIconInfo.Fa(""solid calendar"")"" />
+
+
+<link rel=""stylesheet"" href=""https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"" />
+
+<BitDatePicker Label=""Icon (string)"" Icon=""@(""bi bi-calendar3"")"" />
+
+<BitDatePicker Label=""BitIconInfo.Css"" Icon=""@BitIconInfo.Css(""bi bi-calendar3-event"")"" />
+
+<BitDatePicker Label=""BitIconInfo.Bi"" Icon=""@BitIconInfo.Bi(""calendar3"")"" />
+
+
+<BitDatePicker Label=""Custom nav icons (FA)""
+               PrevMonthNavIcon=""@BitIconInfo.Fa(""solid chevron-left"")""
+               NextMonthNavIcon=""@BitIconInfo.Fa(""solid chevron-right"")""
+               PrevYearNavIcon=""@BitIconInfo.Fa(""solid angles-left"")""
+               NextYearNavIcon=""@BitIconInfo.Fa(""solid angles-right"")""
+               PrevYearRangeNavIcon=""@BitIconInfo.Fa(""solid angles-left"")""
+               NextYearRangeNavIcon=""@BitIconInfo.Fa(""solid angles-right"")""
+               GoToTodayIcon=""@BitIconInfo.Fa(""solid calendar-day"")"" />
+
+<BitDatePicker Label=""TimePicker icons (FA)""
+               ShowTimePicker
+               ShowClearButton
+               GoToNowIcon=""@BitIconInfo.Fa(""solid clock"")""
+               HideTimePickerIcon=""@BitIconInfo.Fa(""solid calendar"")""
+               TimePickerIncreaseHourIcon=""@BitIconInfo.Fa(""solid chevron-up"")""
+               TimePickerDecreaseHourIcon=""@BitIconInfo.Fa(""solid chevron-down"")""
+               TimePickerIncreaseMinuteIcon=""@BitIconInfo.Fa(""solid chevron-up"")""
+               TimePickerDecreaseMinuteIcon=""@BitIconInfo.Fa(""solid chevron-down"")""
+               ClearButtonIcon=""@BitIconInfo.Fa(""solid xmark"")"" />
+
+<BitDatePicker Label=""Custom nav icons (Bootstrap)""
+               PrevMonthNavIcon=""@BitIconInfo.Bi(""chevron-left"")""
+               NextMonthNavIcon=""@BitIconInfo.Bi(""chevron-right"")""
+               PrevYearNavIcon=""@BitIconInfo.Bi(""chevron-double-left"")""
+               NextYearNavIcon=""@BitIconInfo.Bi(""chevron-double-right"")""
+               PrevYearRangeNavIcon=""@BitIconInfo.Bi(""chevron-double-left"")""
+               NextYearRangeNavIcon=""@BitIconInfo.Bi(""chevron-double-right"")""
+               GoToTodayIcon=""@BitIconInfo.Bi(""calendar-event"")"" />";
+
+    private readonly string example16RazorCode = @"
 <style>
     .custom-class {
         overflow: hidden;
@@ -391,9 +439,9 @@ private void HandleInvalidSubmit() { }";
                                   DayPickerHeader = ""custom-day-header"",
                                   WeekNumbersHeader = ""custom-week-header"",
                                   YearMonthPickerWrapper = ""custom-year-picker"" })"" />";
-    private readonly string example15CsharpCode = @"
+    private readonly string example16CsharpCode = @"
 private DateTimeOffset? classesValue;";
 
-    private readonly string example16RazorCode = @"
+    private readonly string example17RazorCode = @"
 <BitDatePicker Dir=""BitDir.Rtl"" />";
 }

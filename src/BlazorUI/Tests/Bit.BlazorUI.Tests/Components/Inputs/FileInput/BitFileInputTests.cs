@@ -59,6 +59,7 @@ public class BitFileInputTests : BunitTestContext
         });
 
         var fileInput = component.Find(".bit-fin-fi");
+
         Assert.AreEqual(isMultiple, fileInput.HasAttribute("multiple"));
     }
 
@@ -76,6 +77,7 @@ public class BitFileInputTests : BunitTestContext
         });
 
         var fileInput = component.Find(".bit-fin-fi");
+
         Assert.AreEqual(accept, fileInput.GetAttribute("accept"));
     }
 
@@ -83,12 +85,14 @@ public class BitFileInputTests : BunitTestContext
     public void BitFileInputShouldUseAllowedExtensionsWhenAcceptIsNull()
     {
         var extensions = new[] { ".jpg", ".png", ".gif" };
+
         var component = RenderComponent<BitFileInput>(parameters =>
         {
             parameters.Add(p => p.AllowedExtensions, extensions);
         });
 
         var fileInput = component.Find(".bit-fin-fi");
+
         Assert.AreEqual(".jpg,.png,.gif", fileInput.GetAttribute("accept"));
     }
 
@@ -105,6 +109,7 @@ public class BitFileInputTests : BunitTestContext
         });
 
         var labelButton = component.Find(".bit-fin-lbl");
+
         Assert.AreEqual(label, labelButton.TextContent);
     }
 
@@ -114,6 +119,7 @@ public class BitFileInputTests : BunitTestContext
         var component = RenderComponent<BitFileInput>();
 
         var labelButton = component.Find(".bit-fin-lbl");
+
         Assert.AreEqual("Browse", labelButton.TextContent);
     }
 
@@ -126,7 +132,8 @@ public class BitFileInputTests : BunitTestContext
         });
 
         var labels = component.FindAll(".bit-fin-lbl");
-        Assert.AreEqual(0, labels.Count);
+
+        Assert.IsEmpty(labels);
     }
 
     [TestMethod]
@@ -138,7 +145,7 @@ public class BitFileInputTests : BunitTestContext
         var ariaLabelledBy = fileInput.GetAttribute("aria-labelledby");
         
         Assert.IsNotNull(ariaLabelledBy);
-        Assert.IsTrue(ariaLabelledBy.Contains("FileInput-"));
+        Assert.Contains("FileInput-", ariaLabelledBy);
     }
 
     [TestMethod]
@@ -163,7 +170,8 @@ public class BitFileInputTests : BunitTestContext
         });
 
         var fileList = component.FindAll(".bit-fin-fl");
-        Assert.AreEqual(0, fileList.Count);
+        
+        Assert.IsEmpty(fileList);
     }
 
     [TestMethod]
@@ -181,8 +189,8 @@ public class BitFileInputTests : BunitTestContext
         Assert.IsNotNull(id1);
         Assert.IsNotNull(id2);
         Assert.AreNotEqual(id1, id2);
-        Assert.IsTrue(id1.StartsWith("FileInput-"));
-        Assert.IsTrue(id2.StartsWith("FileInput-"));
+        Assert.StartsWith("FileInput-", id1);
+        Assert.StartsWith("FileInput-", id2);
     }
 
     [TestMethod]
@@ -218,6 +226,7 @@ public class BitFileInputTests : BunitTestContext
     public void BitFileInputShouldApplyCustomClass()
     {
         var customClass = "custom-class";
+
         var component = RenderComponent<BitFileInput>(parameters =>
         {
             parameters.Add(p => p.Class, customClass);
@@ -232,6 +241,7 @@ public class BitFileInputTests : BunitTestContext
     public void BitFileInputShouldApplyCustomStyle()
     {
         var customStyle = "color: red;";
+
         var component = RenderComponent<BitFileInput>(parameters =>
         {
             parameters.Add(p => p.Style, customStyle);
@@ -246,6 +256,7 @@ public class BitFileInputTests : BunitTestContext
     public void BitFileInputShouldApplyCustomId()
     {
         var customId = "custom-file-input";
+
         var component = RenderComponent<BitFileInput>(parameters =>
         {
             parameters.Add(p => p.Id, customId);
@@ -261,9 +272,91 @@ public class BitFileInputTests : BunitTestContext
     {
         var component = RenderComponent<BitFileInput>();
 
-        var removeButtons = component.FindAll(".bit-fin-usi");
+        var removeButtons = component.FindAll(".bit-fin-rbt");
         
-        Assert.AreEqual(0, removeButtons.Count);
+        Assert.IsEmpty(removeButtons);
+    }
+
+    [Ignore]
+    [TestMethod]
+    public void BitFileInputShouldUseDefaultDeleteIconForRemoveButton()
+    {
+        var component = RenderComponent<BitFileInput>(parameters =>
+        {
+            parameters.Add(p => p.ShowRemoveButton, true);
+        });
+
+        var removeButton = component.Find(".bit-fin-rbt");
+        var icon = removeButton.QuerySelector("i");
+
+        Assert.IsNotNull(icon);
+        Assert.IsTrue(icon.ClassList.Contains("bit-icon"));
+        Assert.IsTrue(icon.ClassList.Contains("bit-icon--Delete"));
+    }
+
+    [Ignore]
+    [TestMethod]
+    public void BitFileInputShouldRespectRemoveButtonIconWithBitIconInfo()
+    {
+        var iconInfo = new BitIconInfo("fa-solid fa-trash", baseClass: "", prefix: "");
+
+        var component = RenderComponent<BitFileInput>(parameters =>
+        {
+            parameters.Add(p => p.ShowRemoveButton, true);
+            parameters.Add(p => p.RemoveButtonIcon, iconInfo);
+        });
+
+        var removeButton = component.Find(".bit-fin-rbt");
+        var icon = removeButton.QuerySelector("i");
+
+        Assert.IsNotNull(icon);
+        Assert.IsTrue(icon.ClassList.Contains("fa-solid"));
+        Assert.IsTrue(icon.ClassList.Contains("fa-trash"));
+    }
+
+    [Ignore]
+    [TestMethod,
+        DataRow("Trash"),
+        DataRow("Delete"),
+        DataRow("Cancel")
+    ]
+    public void BitFileInputShouldRespectRemoveButtonIconName(string iconName)
+    {
+        var component = RenderComponent<BitFileInput>(parameters =>
+        {
+            parameters.Add(p => p.ShowRemoveButton, true);
+            parameters.Add(p => p.RemoveButtonIconName, iconName);
+        });
+
+        var removeButton = component.Find(".bit-fin-rbt");
+        var icon = removeButton.QuerySelector("i");
+
+        Assert.IsNotNull(icon);
+        Assert.IsTrue(icon.ClassList.Contains("bit-icon"));
+        Assert.IsTrue(icon.ClassList.Contains($"bit-icon--{iconName}"));
+    }
+
+    [Ignore]
+    [TestMethod]
+    public void BitFileInputRemoveButtonIconShouldTakePrecedenceOverIconName()
+    {
+        var iconInfo = new BitIconInfo("fa-solid fa-trash", baseClass: "", prefix: "");
+
+        var component = RenderComponent<BitFileInput>(parameters =>
+        {
+            parameters.Add(p => p.ShowRemoveButton, true);
+            parameters.Add(p => p.RemoveButtonIcon, iconInfo);
+            parameters.Add(p => p.RemoveButtonIconName, "Delete");
+        });
+
+        var removeButton = component.Find(".bit-fin-rbt");
+        var icon = removeButton.QuerySelector("i");
+
+        Assert.IsNotNull(icon);
+        // Icon (BitIconInfo) takes precedence over IconName
+        Assert.IsTrue(icon.ClassList.Contains("fa-solid"));
+        Assert.IsTrue(icon.ClassList.Contains("fa-trash"));
+        Assert.IsFalse(icon.ClassList.Contains("bit-icon--Delete"));
     }
 
     [TestMethod]
@@ -273,27 +366,29 @@ public class BitFileInputTests : BunitTestContext
         var instance = component.Instance;
 
         Assert.IsNotNull(instance.Files);
-        Assert.AreEqual(0, instance.Files.Count);
+        Assert.IsEmpty(instance.Files);
         Assert.IsNotNull(instance.InputId);
-        Assert.IsTrue(instance.InputId.StartsWith("FileInput-"));
+        Assert.StartsWith("FileInput-", instance.InputId);
     }
 
     [TestMethod]
     public void BitFileInputRemoveFileShouldClearAllFilesWhenNullProvided()
     {
         var component = RenderComponent<BitFileInput>();
+
         var instance = component.Instance;
 
         // RemoveFile with null should not throw
         instance.RemoveFile(null);
         
-        Assert.AreEqual(0, instance.Files.Count);
+        Assert.IsEmpty(instance.Files);
     }
 
     [TestMethod]
     public void BitFileInputShouldRenderLabelTemplateWhenProvided()
     {
         var templateText = "Custom Label Template";
+
         var component = RenderComponent<BitFileInput>(parameters =>
         {
             parameters.Add(p => p.LabelTemplate, builder =>
@@ -306,11 +401,13 @@ public class BitFileInputTests : BunitTestContext
         });
 
         var customLabel = component.Find(".custom-label");
+
         Assert.AreEqual(templateText, customLabel.TextContent);
         
         // Original label should not be rendered
         var originalLabels = component.FindAll(".bit-fin-lbl");
-        Assert.AreEqual(0, originalLabels.Count);
+
+        Assert.IsEmpty(originalLabels);
     }
 
     [TestMethod]
@@ -321,7 +418,7 @@ public class BitFileInputTests : BunitTestContext
         var fileList = component.FindAll(".bit-fin-fl");
         
         // File list div should be rendered but empty when no files are selected
-        Assert.AreEqual(1, fileList.Count);
+        Assert.HasCount(1, fileList);
         Assert.AreEqual(0, fileList[0].ChildElementCount);
     }
 
@@ -380,12 +477,12 @@ public class BitFileInputTests : BunitTestContext
         
         if (string.IsNullOrEmpty(expectedStyle))
         {
-            Assert.IsFalse(style.Contains("visibility:hidden"));
-            Assert.IsFalse(style.Contains("display:none"));
+            Assert.DoesNotContain("visibility:hidden", style);
+            Assert.DoesNotContain("display:none", style);
         }
         else
         {
-            Assert.IsTrue(style.Contains(expectedStyle));
+            Assert.Contains(expectedStyle, style);
         }
     }
 }

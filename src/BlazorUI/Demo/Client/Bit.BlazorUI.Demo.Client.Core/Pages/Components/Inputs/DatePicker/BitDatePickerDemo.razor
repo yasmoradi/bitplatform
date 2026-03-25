@@ -9,8 +9,8 @@
 <DemoPage Name="DatePicker"
           Description="A BitDatePicker offers a drop-down control that’s optimized for picking a single date from a calendar view where contextual information like the day of the week or fullness of the calendar is important. You can modify the calendar to provide additional context or to limit available dates."
           Parameters="componentParameters"
-          SubEnums="componentSubEnums"
           SubClasses="componentSubClasses"
+          SubEnums="componentSubEnums"
           GitHubUrl="Inputs/DatePicker/BitDatePicker.razor"
           GitHubDemoUrl="Inputs/DatePicker/BitDatePickerDemo.razor">
     <DemoExample Title="Basic" RazorCode="@example1RazorCode" CsharpCode="@example1CsharpCode" Id="example1">
@@ -306,7 +306,75 @@
         </div>
     </DemoExample>
 
-    <DemoExample Title="Style & Class" RazorCode="@example15RazorCode" CsharpCode="@example15CsharpCode" Id="example15">
+    <DemoExample Title="External Icons" RazorCode="@example15RazorCode" Id="example15">
+        <div>Use icons from external libraries like FontAwesome, Material Icons, and Bootstrap Icons with the <b>Icon</b> parameter.</div>
+
+        <br />
+        <br />
+
+        <div class="example-content">
+            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css" />
+
+            <div>FontAwesome:</div>
+            <br />
+            <BitDatePicker Label="Icon (string)" Icon="@("fa-solid fa-calendar-days")" />
+            <br />
+            <BitDatePicker Label="BitIconInfo.Css" Icon="@BitIconInfo.Css("fa-solid fa-calendar-days")" />
+            <br />
+            <BitDatePicker Label="BitIconInfo.Fa" Icon="@BitIconInfo.Fa("solid calendar")" />
+
+            <br /><br /><br />
+
+            <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+
+            <div>Bootstrap:</div>
+            <br />
+            <BitDatePicker Label="Icon (string)" Icon="@("bi bi-calendar3")" />
+            <br />
+            <BitDatePicker Label="BitIconInfo.Css" Icon="@BitIconInfo.Css("bi bi-calendar3-event")" />
+            <br />
+            <BitDatePicker Label="BitIconInfo.Bi" Icon="@BitIconInfo.Bi("calendar3")" />
+
+            <br /><br /><br />
+
+            <div>Navigation &amp; TimePicker Icons (FontAwesome):</div>
+            <br />
+            <BitDatePicker Label="Custom nav icons (FA)"
+                           PrevMonthNavIcon="@BitIconInfo.Fa("solid chevron-left")"
+                           NextMonthNavIcon="@BitIconInfo.Fa("solid chevron-right")"
+                           PrevYearNavIcon="@BitIconInfo.Fa("solid angles-left")"
+                           NextYearNavIcon="@BitIconInfo.Fa("solid angles-right")"
+                           PrevYearRangeNavIcon="@BitIconInfo.Fa("solid angles-left")"
+                           NextYearRangeNavIcon="@BitIconInfo.Fa("solid angles-right")"
+                           GoToTodayIcon="@BitIconInfo.Fa("solid calendar-day")" />
+            <br />
+            <BitDatePicker Label="TimePicker icons (FA)"
+                           ShowTimePicker
+                           ShowClearButton
+                           GoToNowIcon="@BitIconInfo.Fa("solid clock")"
+                           HideTimePickerIcon="@BitIconInfo.Fa("solid calendar")"
+                           TimePickerIncreaseHourIcon="@BitIconInfo.Fa("solid chevron-up")"
+                           TimePickerDecreaseHourIcon="@BitIconInfo.Fa("solid chevron-down")"
+                           TimePickerIncreaseMinuteIcon="@BitIconInfo.Fa("solid chevron-up")"
+                           TimePickerDecreaseMinuteIcon="@BitIconInfo.Fa("solid chevron-down")"
+                           ClearButtonIcon="@BitIconInfo.Fa("solid xmark")" />
+
+            <br /><br /><br />
+
+            <div>Navigation Icons (Bootstrap):</div>
+            <br />
+            <BitDatePicker Label="Custom nav icons (Bootstrap)"
+                           PrevMonthNavIcon="@BitIconInfo.Bi("chevron-left")"
+                           NextMonthNavIcon="@BitIconInfo.Bi("chevron-right")"
+                           PrevYearNavIcon="@BitIconInfo.Bi("chevron-double-left")"
+                           NextYearNavIcon="@BitIconInfo.Bi("chevron-double-right")"
+                           PrevYearRangeNavIcon="@BitIconInfo.Bi("chevron-double-left")"
+                           NextYearRangeNavIcon="@BitIconInfo.Bi("chevron-double-right")"
+                           GoToTodayIcon="@BitIconInfo.Bi("calendar-event")" />
+        </div>
+    </DemoExample>
+
+    <DemoExample Title="Style & Class" RazorCode="@example16RazorCode" CsharpCode="@example16CsharpCode" Id="example16">
         <div>Explore styling and class customization for BitDatePicker, including component styles, custom classes, and detailed styles.</div>
         <br /><br />
         <div>Component's Style & Class:</div><br />
@@ -353,7 +421,7 @@
         </div>
     </DemoExample>
 
-    <DemoExample Title="RTL" RazorCode="@example16RazorCode" Id="example16">
+    <DemoExample Title="RTL" RazorCode="@example17RazorCode" Id="example17">
         <div>Use BitDatePicker in right-to-left (RTL).</div>
         <br />
         <div dir="rtl">

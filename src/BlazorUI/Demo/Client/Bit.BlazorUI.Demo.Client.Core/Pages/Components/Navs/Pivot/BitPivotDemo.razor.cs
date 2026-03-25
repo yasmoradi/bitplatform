@@ -31,6 +31,15 @@ public partial class BitPivotDemo
         },
         new()
         {
+            Name = "Color",
+            Type = "BitColor?",
+            DefaultValue = "null",
+            Description = "The general color of the pivot.",
+            LinkType = LinkType.Link,
+            Href = "#color-enum",
+        },
+        new()
+        {
             Name = "DefaultSelectedKey",
             Type = "string?",
             DefaultValue = "null",
@@ -172,10 +181,21 @@ public partial class BitPivotDemo
                 },
                 new()
                 {
+                    Name = "Icon",
+                    Type = "BitIconInfo?",
+                    DefaultValue = "null",
+                    Description = "Gets or sets the icon to display next to the pivot link using custom CSS classes for external icon libraries. Takes precedence over IconName when both are set.",
+                    LinkType = LinkType.Link,
+                    Href = "#bit-icon-info",
+                },
+                new()
+                {
                     Name = "IconName",
                     Type = "string?",
                     DefaultValue = "null",
-                    Description = "The icon name for the icon shown next to the pivot link.",
+                    Description = "Gets or sets the name of the icon to display next to the pivot link from the built-in Fluent UI icons.",
+                    LinkType = LinkType.Link,
+                    Href = "https://blazorui.bitplatform.dev/iconography",
                 },
                 new()
                 {
@@ -269,6 +289,35 @@ public partial class BitPivotDemo
                    DefaultValue = "null",
                    Description = "Custom CSS classes/styles for the header item count of the BitPivot."
                }
+            ]
+        },
+        new()
+        {
+            Id = "bit-icon-info",
+            Title = "BitIconInfo",
+            Parameters =
+            [
+               new()
+               {
+                   Name = "Name",
+                   Type = "string?",
+                   DefaultValue = "null",
+                   Description = "Gets or sets the name of the icon."
+               },
+               new()
+               {
+                   Name = "BaseClass",
+                   Type = "string?",
+                   DefaultValue = "null",
+                   Description = "Gets or sets the base CSS class for the icon. For built-in Fluent UI icons, this defaults to \"bit-icon\". For external icon libraries like FontAwesome, you might set this to \"fa\" or leave empty."
+               },
+               new()
+               {
+                   Name = "Prefix",
+                   Type = "string?",
+                   DefaultValue = "null",
+                   Description = "Gets or sets the CSS class prefix used before the icon name. For built-in Fluent UI icons, this defaults to \"bit-icon--\". For external icon libraries, you might set this to \"fa-\" or leave empty."
+               },
             ]
         }
     ];
@@ -429,6 +478,117 @@ public partial class BitPivotDemo
                     Name= "End",
                     Description="Display header at the end (Right for LTR and Left for RTL).",
                     Value="3",
+                },
+            ]
+        },
+        new()
+        {
+            Id = "color-enum",
+            Name = "BitColor",
+            Description = "",
+            Items =
+            [
+                new()
+                {
+                    Name = "Primary",
+                    Description = "Primary general color.",
+                    Value = "0",
+                },
+                new()
+                {
+                    Name = "Secondary",
+                    Description = "Secondary general color.",
+                    Value = "1",
+                },
+                new()
+                {
+                    Name = "Tertiary",
+                    Description = "Tertiary general color.",
+                    Value = "2",
+                },
+                new()
+                {
+                    Name = "Info",
+                    Description = "Info general color.",
+                    Value = "3",
+                },
+                new()
+                {
+                    Name = "Success",
+                    Description = "Success general color.",
+                    Value = "4",
+                },
+                new()
+                {
+                    Name = "Warning",
+                    Description = "Warning general color.",
+                    Value = "5",
+                },
+                new()
+                {
+                    Name = "SevereWarning",
+                    Description = "SevereWarning general color.",
+                    Value = "6",
+                },
+                new()
+                {
+                    Name = "Error",
+                    Description = "Error general color.",
+                    Value = "7",
+                },
+                new()
+                {
+                    Name = "PrimaryBackground",
+                    Description = "Primary background color.",
+                    Value = "8",
+                },
+                new()
+                {
+                    Name = "SecondaryBackground",
+                    Description = "Secondary background color.",
+                    Value = "9",
+                },
+                new()
+                {
+                    Name = "TertiaryBackground",
+                    Description = "Tertiary background color.",
+                    Value = "10",
+                },
+                new()
+                {
+                    Name = "PrimaryForeground",
+                    Description = "Primary foreground color.",
+                    Value = "11",
+                },
+                new()
+                {
+                    Name = "SecondaryForeground",
+                    Description = "Secondary foreground color.",
+                    Value = "12",
+                },
+                new()
+                {
+                    Name = "TertiaryForeground",
+                    Description = "Tertiary foreground color.",
+                    Value = "13",
+                },
+                new()
+                {
+                    Name = "PrimaryBorder",
+                    Description = "Primary border color.",
+                    Value = "14",
+                },
+                new()
+                {
+                    Name = "SecondaryBorder",
+                    Description = "Secondary border color.",
+                    Value = "15",
+                },
+                new()
+                {
+                    Name = "TertiaryBorder",
+                    Description = "Tertiary border color.",
+                    Value = "16",
                 },
             ]
         },
@@ -947,6 +1107,133 @@ private BitPivotItem selectedPivotItem;";
 </BitPivot>";
 
     private readonly string example11RazorCode = @"
+<BitPivot Color=""BitColor.Secondary"">
+    <BitPivotItem HeaderText=""Primary"">
+        <h1>Pivot #1: Primary</h1>
+        <div>
+            Once upon a time, stories wove connections between people, a symphony of voices crafting shared dreams.
+            Each word carried meaning, each pause brought understanding. Placeholder text reminds us of that moment
+            when possibilities are limitless, waiting for content to emerge. The spaces here are open for growth,
+            for ideas that change minds and spark emotions. This is where the journey begins—your words will lead the way.
+        </div>
+    </BitPivotItem>
+    <BitPivotItem HeaderText=""Secondary"">
+        <h1>Pivot #2: Secondary</h1>
+        <div>
+            Every story starts with a blank canvas, a quiet space waiting to be filled with ideas, emotions, and dreams.
+            These placeholder words symbolize the beginning—a moment of possibility where creativity has yet to take shape.
+            Imagine this text as the scaffolding of something remarkable, a foundation upon which connections and
+            inspirations will be built. Soon, these lines will transform into narratives that provoke thought,
+            spark emotion, and resonate with those who encounter them. Until then, they remind us of the beauty
+            in potential—the quiet magic of beginnings, where everything is still to come, and the possibilities
+            are boundless. This space is yours to craft, yours to shape, yours to bring to life.
+        </div>
+    </BitPivotItem>
+    <BitPivotItem HeaderText=""Info"">
+        <h1>Pivot #3: Info</h1>
+        <div>
+            In the beginning, there is silence—a blank canvas yearning to be filled, a quiet space where creativity waits
+            to awaken. These words are temporary, standing in place of ideas yet to come, a glimpse into the infinite
+            possibilities that lie ahead. Think of this text as a bridge, connecting the empty spaces of now with the
+            vibrant narratives of tomorrow. It whispers of the stories waiting to be told, of the thoughts yet to be
+            shaped into meaning, and the emotions ready to resonate with every reader.
+        </div>
+    </BitPivotItem>
+</BitPivot>
+
+<BitPivot HeaderType=""BitPivotHeaderType.Tab"" Color=""BitColor.Success"">
+    <BitPivotItem HeaderText=""Primary bg"">
+        <h1>Pivot #1: Primary background</h1>
+        <div>
+            Once upon a time, stories wove connections between people, a symphony of voices crafting shared dreams.
+            Each word carried meaning, each pause brought understanding. Placeholder text reminds us of that moment
+            when possibilities are limitless, waiting for content to emerge. The spaces here are open for growth,
+            for ideas that change minds and spark emotions. This is where the journey begins—your words will lead the way.
+        </div>
+    </BitPivotItem>
+    <BitPivotItem HeaderText=""Secondary bg"">
+        <h1>Pivot #2: Secondary background</h1>
+        <div>
+            Every story starts with a blank canvas, a quiet space waiting to be filled with ideas, emotions, and dreams.
+            These placeholder words symbolize the beginning—a moment of possibility where creativity has yet to take shape.
+            Imagine this text as the scaffolding of something remarkable, a foundation upon which connections and
+            inspirations will be built. Soon, these lines will transform into narratives that provoke thought,
+            spark emotion, and resonate with those who encounter them. Until then, they remind us of the beauty
+            in potential—the quiet magic of beginnings, where everything is still to come, and the possibilities
+            are boundless. This space is yours to craft, yours to shape, yours to bring to life.
+        </div>
+    </BitPivotItem>
+    <BitPivotItem HeaderText=""Tertiary fg"">
+        <h1>Pivot #3: Tertiary foreground</h1>
+        <div>
+            In the beginning, there is silence—a blank canvas yearning to be filled, a quiet space where creativity waits
+            to awaken. These words are temporary, standing in place of ideas yet to come, a glimpse into the infinite
+            possibilities that lie ahead. Think of this text as a bridge, connecting the empty spaces of now with the
+            vibrant narratives of tomorrow. It whispers of the stories waiting to be told, of the thoughts yet to be
+            shaped into meaning, and the emotions ready to resonate with every reader.
+        </div>
+    </BitPivotItem>
+</BitPivot>";
+
+    private readonly string example12RazorCode = @"
+<link rel=""stylesheet"" href=""https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css"" />
+
+<BitPivot>
+    <BitPivotItem HeaderText=""Home"" Icon=""@(""fa-solid fa-house"")"">
+        <h1>Pivot #1: Home</h1>
+        <div>
+            Once upon a time, stories wove connections between people, a symphony of voices crafting shared dreams.
+            Each word carried meaning, each pause brought understanding. Placeholder text reminds us of that moment
+            when possibilities are limitless, waiting for content to emerge.
+        </div>
+    </BitPivotItem>
+    <BitPivotItem HeaderText=""Heart"" Icon=""@BitIconInfo.Css(""fa-solid fa-heart"")"">
+        <h1>Pivot #2: Heart</h1>
+        <div>
+            Every story starts with a blank canvas, a quiet space waiting to be filled with ideas, emotions, and dreams.
+            These placeholder words symbolize the beginning—a moment of possibility where creativity has yet to take shape.
+        </div>
+    </BitPivotItem>
+    <BitPivotItem HeaderText=""Rocket"" Icon=""@BitIconInfo.Fa(""solid rocket"")"">
+        <h1>Pivot #3: Rocket</h1>
+        <div>
+            In the beginning, there is silence—a blank canvas yearning to be filled, a quiet space where creativity waits
+            to awaken. These words are temporary, standing in place of ideas yet to come, a glimpse into the infinite
+            possibilities that lie ahead.
+        </div>
+    </BitPivotItem>
+</BitPivot>
+
+
+<link rel=""stylesheet"" href=""https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"" />
+
+<BitPivot>
+    <BitPivotItem HeaderText=""Home"" Icon=""@(""bi bi-house-fill"")"">
+        <h1>Pivot #1: Home</h1>
+        <div>
+            Once upon a time, stories wove connections between people, a symphony of voices crafting shared dreams.
+            Each word carried meaning, each pause brought understanding. Placeholder text reminds us of that moment
+            when possibilities are limitless, waiting for content to emerge.
+        </div>
+    </BitPivotItem>
+    <BitPivotItem HeaderText=""Heart"" Icon=""@BitIconInfo.Css(""bi bi-heart-fill"")"">
+        <h1>Pivot #2: Heart</h1>
+        <div>
+            Every story starts with a blank canvas, a quiet space waiting to be filled with ideas, emotions, and dreams.
+            These placeholder words symbolize the beginning—a moment of possibility where creativity has yet to take shape.
+        </div>
+    </BitPivotItem>
+    <BitPivotItem HeaderText=""Gear"" Icon=""@BitIconInfo.Bi(""gear-fill"")"">
+        <h1>Pivot #3: Gear</h1>
+        <div>
+            In the beginning, there is silence—a blank canvas yearning to be filled, a quiet space where creativity waits
+            to awaken. These words are temporary, standing in place of ideas yet to come, a glimpse into the infinite
+            possibilities that lie ahead.
+        </div>
+    </BitPivotItem>
+</BitPivot>";
+
+    private readonly string example13RazorCode = @"
 <style>
     .custom-class {
         margin: 1rem;
@@ -1106,7 +1393,7 @@ private BitPivotItem selectedPivotItem;";
     </BitPivotItem>
 </BitPivot>";
 
-    private readonly string example12RazorCode = @"
+    private readonly string example14RazorCode = @"
 <BitPivot Dir=""BitDir.Rtl"" OverflowBehavior=""@BitPivotOverflowBehavior.Scroll"">
     <BitPivotItem HeaderText=""اسناد"" IconName=""@BitIconName.Info"">
         لورم ایپسوم متن ساختگی با تولید سادگی نامفهوم از صنعت چاپ و با استفاده از طراحان گرافیک است.

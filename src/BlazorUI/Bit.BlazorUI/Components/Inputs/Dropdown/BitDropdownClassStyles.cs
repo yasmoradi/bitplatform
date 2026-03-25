@@ -143,6 +143,11 @@ public class BitDropdownClassStyles
     public string? ItemCheckIcon { get; set; }
 
     /// <summary>
+    /// Custom CSS classes/styles for the item icon of the BitDropdown.
+    /// </summary>
+    public string? ItemIcon { get; set; }
+
+    /// <summary>
     /// Custom CSS classes/styles for the item text of the BitDropdown.
     /// </summary>
     public string? ItemText { get; set; }

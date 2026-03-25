@@ -2,8 +2,8 @@
 
 public partial class BitDatePickerDemo
 {
-    private readonly List<ComponentParameter> componentParameters = new()
-    {
+    private readonly List<ComponentParameter> componentParameters =
+    [
         new()
         {
             Name = "AllowTextInput",
@@ -40,6 +40,45 @@ public partial class BitDatePickerDemo
             Description = "Custom CSS classes for different parts of the BitDatePicker.",
             Href = "#datepicker-class-styles",
             LinkType = LinkType.Link
+        },
+        new()
+        {
+            Name = "ClearButtonIcon",
+            Type = "BitIconInfo?",
+            DefaultValue = "null",
+            Description = "The icon to display inside the clear button. Takes precedence over ClearButtonIconName when both are set.",
+            LinkType = LinkType.Link,
+            Href = "#bit-icon-info",
+        },
+        new()
+        {
+            Name = "ClearButtonIconName",
+            Type = "string?",
+            DefaultValue = "null",
+            Description = "The name of the clear button's icon from the built-in Fluent UI icon set."
+        },
+        new()
+        {
+            Name = "CloseButtonIcon",
+            Type = "BitIconInfo?",
+            DefaultValue = "null",
+            Description = "The icon to display inside the close button. Takes precedence over CloseButtonIconName when both are set.",
+            LinkType = LinkType.Link,
+            Href = "#bit-icon-info",
+        },
+        new()
+        {
+            Name = "CloseButtonIconName",
+            Type = "string?",
+            DefaultValue = "null",
+            Description = "The name of the close button's icon from the built-in Fluent UI icon set."
+        },
+        new()
+        {
+            Name = "CloseDatePickerTitle",
+            Type = "string",
+            DefaultValue = "Close date picker",
+            Description = "The title of the CloseDatePicker button (tooltip).",
         },
         new()
         {
@@ -85,6 +124,29 @@ public partial class BitDatePickerDemo
         },
         new()
         {
+            Name = "GoToNowIcon",
+            Type = "BitIconInfo?",
+            DefaultValue = "null",
+            Description = "The icon to display inside the GoToNow button. Takes precedence over GoToNowIconName when both are set.",
+            LinkType = LinkType.Link,
+            Href = "#bit-icon-info",
+        },
+        new()
+        {
+            Name = "GoToNowIconName",
+            Type = "string?",
+            DefaultValue = "null",
+            Description = "The name of the GoToNow button's icon from the built-in Fluent UI icon set."
+        },
+        new()
+        {
+            Name = "GoToNowTitle",
+            Type = "string",
+            DefaultValue = "Go to now",
+            Description = "The title of the GoToNow button (tooltip)."
+        },
+        new()
+        {
             Name = "GoToPrevMonthTitle",
             Type = "string",
             DefaultValue = "Go to previous month",
@@ -106,6 +168,22 @@ public partial class BitDatePickerDemo
         },
         new()
         {
+            Name = "GoToTodayIcon",
+            Type = "BitIconInfo?",
+            DefaultValue = "null",
+            Description = "The icon to display inside the GoToToday button. Takes precedence over GoToTodayIconName when both are set.",
+            LinkType = LinkType.Link,
+            Href = "#bit-icon-info",
+        },
+        new()
+        {
+            Name = "GoToTodayIconName",
+            Type = "string?",
+            DefaultValue = "null",
+            Description = "The name of the GoToToday button's icon from the built-in Fluent UI icon set."
+        },
+        new()
+        {
             Name = "GoToTodayTitle",
             Type = "string",
             DefaultValue = "Go to today",
@@ -117,6 +195,29 @@ public partial class BitDatePickerDemo
             Type = "bool",
             DefaultValue = "false",
             Description = "Determines if the DatePicker has a border."
+        },
+        new()
+        {
+            Name = "HideTimePickerIcon",
+            Type = "BitIconInfo?",
+            DefaultValue = "null",
+            Description = "The icon to display inside the HideTimePicker button. Takes precedence over HideTimePickerIconName when both are set.",
+            LinkType = LinkType.Link,
+            Href = "#bit-icon-info",
+        },
+        new()
+        {
+            Name = "HideTimePickerIconName",
+            Type = "string?",
+            DefaultValue = "null",
+            Description = "The name of the HideTimePicker button's icon from the built-in Fluent UI icon set."
+        },
+        new()
+        {
+            Name = "HideTimePickerTitle",
+            Type = "string",
+            DefaultValue = "Hide time picker",
+            Description = "The title of the HideTimePicker button (tooltip)."
         },
         new()
         {
@@ -134,10 +235,19 @@ public partial class BitDatePickerDemo
         },
         new()
         {
-            Name = "IconTemplate",
-            Type = "RenderFragment?",
+            Name = "HourStep",
+            Type = "int",
+            DefaultValue = "1",
+            Description = "Determines increment/decrement steps for date-picker's hour.",
+        },
+        new()
+        {
+            Name = "Icon",
+            Type = "BitIconInfo?",
             DefaultValue = "null",
-            Description = "Custom template for the DatePicker's icon."
+            Description = "The icon to display in the DatePicker input using custom CSS classes for external icon libraries. Takes precedence over IconName when both are set.",
+            LinkType = LinkType.Link,
+            Href = "#bit-icon-info",
         },
         new()
         {
@@ -151,9 +261,16 @@ public partial class BitDatePickerDemo
         new()
         {
             Name = "IconName",
-            Type = "string",
-            DefaultValue = "CalendarMirrored",
-            Description = "The name of the DatePicker's icon."
+            Type = "string?",
+            DefaultValue = "null",
+            Description = "The name of the DatePicker's icon from the built-in Fluent UI icon set. For external icon libraries, use Icon instead."
+        },
+        new()
+        {
+            Name = "IconTemplate",
+            Type = "RenderFragment?",
+            DefaultValue = "null",
+            Description = "Custom template for the DatePicker's icon."
         },
         new()
         {
@@ -206,6 +323,13 @@ public partial class BitDatePickerDemo
         },
         new()
         {
+            Name = "MinuteStep",
+            Type = "int",
+            DefaultValue = "1",
+            Description = "Determines increment/decrement steps for date-picker's minute.",
+        },
+        new()
+        {
             Name = "Mode",
             Type = "BitDatePickerMode",
             DefaultValue = "BitDatePickerMode.DatePicker",
@@ -226,6 +350,54 @@ public partial class BitDatePickerDemo
             Type = "string",
             DefaultValue = "{0}, change month",
             Description = "The title of the month picker's toggle (tooltip)."
+        },
+        new()
+        {
+            Name = "NextMonthNavIcon",
+            Type = "BitIconInfo?",
+            DefaultValue = "null",
+            Description = "The icon to display inside the next-month navigation button. Takes precedence over NextMonthNavIconName when both are set.",
+            LinkType = LinkType.Link,
+            Href = "#bit-icon-info",
+        },
+        new()
+        {
+            Name = "NextMonthNavIconName",
+            Type = "string?",
+            DefaultValue = "null",
+            Description = "The name of the next-month navigation button's icon from the built-in Fluent UI icon set."
+        },
+        new()
+        {
+            Name = "NextYearNavIcon",
+            Type = "BitIconInfo?",
+            DefaultValue = "null",
+            Description = "The icon to display inside the next-year navigation button. Takes precedence over NextYearNavIconName when both are set.",
+            LinkType = LinkType.Link,
+            Href = "#bit-icon-info",
+        },
+        new()
+        {
+            Name = "NextYearNavIconName",
+            Type = "string?",
+            DefaultValue = "null",
+            Description = "The name of the next-year navigation button's icon from the built-in Fluent UI icon set."
+        },
+        new()
+        {
+            Name = "NextYearRangeNavIcon",
+            Type = "BitIconInfo?",
+            DefaultValue = "null",
+            Description = "The icon to display inside the next-year-range navigation button. Takes precedence over NextYearRangeNavIconName when both are set.",
+            LinkType = LinkType.Link,
+            Href = "#bit-icon-info",
+        },
+        new()
+        {
+            Name = "NextYearRangeNavIconName",
+            Type = "string?",
+            DefaultValue = "null",
+            Description = "The name of the next-year-range navigation button's icon from the built-in Fluent UI icon set."
         },
         new()
         {
@@ -260,6 +432,54 @@ public partial class BitDatePickerDemo
         },
         new()
         {
+            Name = "PrevMonthNavIcon",
+            Type = "BitIconInfo?",
+            DefaultValue = "null",
+            Description = "The icon to display inside the previous-month navigation button. Takes precedence over PrevMonthNavIconName when both are set.",
+            LinkType = LinkType.Link,
+            Href = "#bit-icon-info",
+        },
+        new()
+        {
+            Name = "PrevMonthNavIconName",
+            Type = "string?",
+            DefaultValue = "null",
+            Description = "The name of the previous-month navigation button's icon from the built-in Fluent UI icon set."
+        },
+        new()
+        {
+            Name = "PrevYearNavIcon",
+            Type = "BitIconInfo?",
+            DefaultValue = "null",
+            Description = "The icon to display inside the previous-year navigation button. Takes precedence over PrevYearNavIconName when both are set.",
+            LinkType = LinkType.Link,
+            Href = "#bit-icon-info",
+        },
+        new()
+        {
+            Name = "PrevYearNavIconName",
+            Type = "string?",
+            DefaultValue = "null",
+            Description = "The name of the previous-year navigation button's icon from the built-in Fluent UI icon set."
+        },
+        new()
+        {
+            Name = "PrevYearRangeNavIcon",
+            Type = "BitIconInfo?",
+            DefaultValue = "null",
+            Description = "The icon to display inside the previous-year-range navigation button. Takes precedence over PrevYearRangeNavIconName when both are set.",
+            LinkType = LinkType.Link,
+            Href = "#bit-icon-info",
+        },
+        new()
+        {
+            Name = "PrevYearRangeNavIconName",
+            Type = "string?",
+            DefaultValue = "null",
+            Description = "The name of the previous-year-range navigation button's icon from the built-in Fluent UI icon set."
+        },
+        new()
+        {
             Name = "Responsive",
             Type = "bool",
             DefaultValue = "false",
@@ -288,6 +508,13 @@ public partial class BitDatePickerDemo
         },
         new()
         {
+            Name = "ShowGoToNow",
+            Type = "bool",
+            DefaultValue = "true",
+            Description = "Whether the GoToNow button should be shown or not."
+        },
+        new()
+        {
             Name = "ShowGoToToday",
             Type = "bool",
             DefaultValue = "true",
@@ -309,10 +536,47 @@ public partial class BitDatePickerDemo
         },
         new()
         {
+            Name = "ShowTimePickerAsOverlay",
+            Type = "bool",
+            DefaultValue = "false",
+            Description = "Show the time picker as an overlay on top of the date picker when visible."
+        },
+        new()
+        {
+            Name = "ShowTimePickerIcon",
+            Type = "BitIconInfo?",
+            DefaultValue = "null",
+            Description = "The icon to display inside the ShowTimePicker button. Takes precedence over ShowTimePickerIconName when both are set.",
+            LinkType = LinkType.Link,
+            Href = "#bit-icon-info",
+        },
+        new()
+        {
+            Name = "ShowTimePickerIconName",
+            Type = "string?",
+            DefaultValue = "null",
+            Description = "The name of the ShowTimePicker button's icon from the built-in Fluent UI icon set."
+        },
+        new()
+        {
+            Name = "ShowTimePickerTitle",
+            Type = "string",
+            DefaultValue = "Show time picker",
+            Description = "The title of the ShowTimePicker button (tooltip)."
+        },
+        new()
+        {
             Name = "ShowWeekNumbers",
             Type = "bool",
             DefaultValue = "false",
             Description = "Whether the week number (weeks 1 to 53) should be shown before each week row."
+        },
+        new()
+        {
+            Name = "Standalone",
+            Type = "bool",
+            DefaultValue = "false",
+            Description = "Whether the date-picker is rendered standalone or with the input component and callout.",
         },
         new()
         {
@@ -332,19 +596,76 @@ public partial class BitDatePickerDemo
         },
         new()
         {
-            Name = "Standalone",
-            Type = "bool",
-            DefaultValue = "false",
-            Description = "Whether the date-picker is rendered standalone or with the input component and callout.",
-        },
-        new()
-        {
             Name = "TimeFormat",
             Type = "BitTimeFormat",
             DefaultValue = "BitTimeFormat.TwentyFourHours",
             Description = "The time format of the time-picker, 24H or 12H.",
             LinkType = LinkType.Link,
             Href = "#time-format-enum"
+        },
+        new()
+        {
+            Name = "TimePickerDecreaseHourIcon",
+            Type = "BitIconInfo?",
+            DefaultValue = "null",
+            Description = "The icon to display inside the time-picker's decrease-hour button. Takes precedence over TimePickerDecreaseHourIconName when both are set.",
+            LinkType = LinkType.Link,
+            Href = "#bit-icon-info",
+        },
+        new()
+        {
+            Name = "TimePickerDecreaseHourIconName",
+            Type = "string?",
+            DefaultValue = "null",
+            Description = "The name of the time-picker's decrease-hour button icon from the built-in Fluent UI icon set."
+        },
+        new()
+        {
+            Name = "TimePickerDecreaseMinuteIcon",
+            Type = "BitIconInfo?",
+            DefaultValue = "null",
+            Description = "The icon to display inside the time-picker's decrease-minute button. Takes precedence over TimePickerDecreaseMinuteIconName when both are set.",
+            LinkType = LinkType.Link,
+            Href = "#bit-icon-info",
+        },
+        new()
+        {
+            Name = "TimePickerDecreaseMinuteIconName",
+            Type = "string?",
+            DefaultValue = "null",
+            Description = "The name of the time-picker's decrease-minute button icon from the built-in Fluent UI icon set."
+        },
+        new()
+        {
+            Name = "TimePickerIncreaseHourIcon",
+            Type = "BitIconInfo?",
+            DefaultValue = "null",
+            Description = "The icon to display inside the time-picker's increase-hour button. Takes precedence over TimePickerIncreaseHourIconName when both are set.",
+            LinkType = LinkType.Link,
+            Href = "#bit-icon-info",
+        },
+        new()
+        {
+            Name = "TimePickerIncreaseHourIconName",
+            Type = "string?",
+            DefaultValue = "null",
+            Description = "The name of the time-picker's increase-hour button icon from the built-in Fluent UI icon set."
+        },
+        new()
+        {
+            Name = "TimePickerIncreaseMinuteIcon",
+            Type = "BitIconInfo?",
+            DefaultValue = "null",
+            Description = "The icon to display inside the time-picker's increase-minute button. Takes precedence over TimePickerIncreaseMinuteIconName when both are set.",
+            LinkType = LinkType.Link,
+            Href = "#bit-icon-info",
+        },
+        new()
+        {
+            Name = "TimePickerIncreaseMinuteIconName",
+            Type = "string?",
+            DefaultValue = "null",
+            Description = "The name of the time-picker's increase-minute button icon from the built-in Fluent UI icon set."
         },
         new()
         {
@@ -387,125 +708,17 @@ public partial class BitDatePickerDemo
             Type = "string",
             DefaultValue = "{0} - {1}, change month",
             Description = "The title of the year range picker's toggle (tooltip)."
-        },
-        new()
-        {
-            Name = "HourStep",
-            Type = "int",
-            DefaultValue = "1",
-            Description = "Determines increment/decrement steps for date-picker's hour.",
-        },
-        new()
-        {
-            Name = "MinuteStep",
-            Type = "int",
-            DefaultValue = "1",
-            Description = "Determines increment/decrement steps for date-picker's minute.",
         }
-    };
+    ];
 
-    private readonly List<ComponentSubEnum> componentSubEnums = new()
-    {
-        new()
-        {
-            Id = "component-visibility-enum",
-            Name = "BitVisibility",
-            Description = "",
-            Items = new()
-            {
-                new()
-                {
-                    Name = "Visible",
-                    Description = "Show content of the component.",
-                    Value = "0"
-                },
-                new()
-                {
-                    Name = "Hidden",
-                    Description = "Hide content of the component,though the space it takes on the page remains.",
-                    Value = "1"
-                },
-                new()
-                {
-                    Name = "Collapsed",
-                    Description = "Hide content of the component,though the space it takes on the page gone.",
-                    Value = "2"
-                }
-            }
-        },
-        new()
-        {
-            Id = "icon-location-enum",
-            Name = "BitIconLocation",
-            Description = "",
-            Items = new()
-            {
-                new()
-                {
-                    Name = "Left",
-                    Description = "Show the icon at the left side.",
-                    Value = "0"
-                },
-                new()
-                {
-                    Name = "Right",
-                    Description = "Show the icon at the right side.",
-                    Value = "1"
-                }
-            }
-        },
-        new()
-        {
-            Id = "time-format-enum",
-            Name = "BitTimeFormat",
-            Description = "",
-            Items = new()
-            {
-                new()
-                {
-                    Name= "TwentyFourHours",
-                    Description="Show time pickers in 24 hours format.",
-                    Value="0"
-                },
-                new()
-                {
-                    Name= "TwelveHours",
-                    Description="Show time pickers in 12 hours format.",
-                    Value="1"
-                }
-            }
-        },
-        new()
-        {
-            Id = "datepicker-mode-enum",
-            Name = "BitDatePickerMode",
-            Description = "",
-            Items = new()
-            {
-                new()
-                {
-                    Name = "DatePicker",
-                    Description = "Standard date picker mode allowing selection of a specific day.",
-                    Value = "0"
-                },
-                new()
-                {
-                    Name = "MonthPicker",
-                    Description = "Month picker mode allowing selection of only month and year. The day is automatically set to the 1st of the selected month.",
-                    Value = "1"
-                }
-            }
-        }
-    };
-
-    private readonly List<ComponentSubClass> componentSubClasses = new()
-    {
+    private readonly List<ComponentSubClass> componentSubClasses =
+    [
         new()
         {
             Id = "datepicker-class-styles",
             Title = "BitDatePickerClassStyles",
-            Parameters = new()
-            {
+            Parameters =
+            [
                 new()
                 {
                     Name = "Root",
@@ -933,9 +1146,132 @@ public partial class BitDatePickerDemo
                     DefaultValue = "null",
                     Description = "Custom CSS classes/styles for each year button of the BitDatePicker."
                 }
-            }
+            ]
+        },
+        new()
+        {
+            Id = "bit-icon-info",
+            Title = "BitIconInfo",
+            Parameters =
+            [
+               new()
+               {
+                   Name = "Name",
+                   Type = "string?",
+                   DefaultValue = "null",
+                   Description = "Gets or sets the name of the icon."
+               },
+               new()
+               {
+                   Name = "BaseClass",
+                   Type = "string?",
+                   DefaultValue = "null",
+                   Description = "Gets or sets the base CSS class for the icon. For built-in Fluent UI icons, this defaults to \"bit-icon\". For external icon libraries like FontAwesome, you might set this to \"fa\" or leave empty."
+               },
+               new()
+               {
+                   Name = "Prefix",
+                   Type = "string?",
+                   DefaultValue = "null",
+                   Description = "Gets or sets the CSS class prefix used before the icon name. For built-in Fluent UI icons, this defaults to \"bit-icon--\". For external icon libraries, you might set this to \"fa-\" or leave empty."
+               },
+            ]
+        },
+    ];
+
+    private readonly List<ComponentSubEnum> componentSubEnums =
+    [
+        new()
+        {
+            Id = "component-visibility-enum",
+            Name = "BitVisibility",
+            Description = "",
+            Items =
+            [
+                new()
+                {
+                    Name = "Visible",
+                    Description = "Show content of the component.",
+                    Value = "0"
+                },
+                new()
+                {
+                    Name = "Hidden",
+                    Description = "Hide content of the component,though the space it takes on the page remains.",
+                    Value = "1"
+                },
+                new()
+                {
+                    Name = "Collapsed",
+                    Description = "Hide content of the component,though the space it takes on the page gone.",
+                    Value = "2"
+                }
+            ]
+        },
+        new()
+        {
+            Id = "icon-location-enum",
+            Name = "BitIconLocation",
+            Description = "",
+            Items =
+            [
+                new()
+                {
+                    Name = "Left",
+                    Description = "Show the icon at the left side.",
+                    Value = "0"
+                },
+                new()
+                {
+                    Name = "Right",
+                    Description = "Show the icon at the right side.",
+                    Value = "1"
+                }
+            ]
+        },
+        new()
+        {
+            Id = "time-format-enum",
+            Name = "BitTimeFormat",
+            Description = "",
+            Items =
+            [
+                new()
+                {
+                    Name= "TwentyFourHours",
+                    Description="Show time pickers in 24 hours format.",
+                    Value="0"
+                },
+                new()
+                {
+                    Name= "TwelveHours",
+                    Description="Show time pickers in 12 hours format.",
+                    Value="1"
+                }
+            ]
+        },
+        new()
+        {
+            Id = "datepicker-mode-enum",
+            Name = "BitDatePickerMode",
+            Description = "",
+            Items =
+            [
+                new()
+                {
+                    Name = "DatePicker",
+                    Description = "Standard date picker mode allowing selection of a specific day.",
+                    Value = "0"
+                },
+                new()
+                {
+                    Name = "MonthPicker",
+                    Description = "Month picker mode allowing selection of only month and year. The day is automatically set to the 1st of the selected month.",
+                    Value = "1"
+                }
+            ]
         }
-    };
+    ];
 
 
 
