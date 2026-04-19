@@ -37,6 +37,7 @@
     overflow: hidden;
     font-weight: 600;
     position: relative;
+    border-radius: 50%;
     align-items: center;
     justify-content: center;
     border-width: $shp-border-width;
@@ -54,12 +55,6 @@
     }
 }
 
-.bit-prs-crl {
-    .bit-prs-imc {
-        border-radius: 50%;
-    }
-}
-
 .bit-prs-sqr {
     .bit-prs-imc {
         border-radius: $shp-border-radius;
@@ -67,6 +62,7 @@
 }
 
 .bit-prs-imo {
+    z-index: 2;
     width: 100%;
     height: 100%;
     display: none;
@@ -85,15 +81,20 @@
 }
 
 .bit-prs-img {
+    top: 0;
+    left: 0;
     opacity: 1;
+    z-index: 1;
     width: 100%;
     height: 100%;
     display: block;
     object-fit: cover;
+    position: absolute;
 }
 
 .bit-prs-pre {
     top: auto;
+    z-index: 2;
     display: flex;
     width: spacing(1);
     height: spacing(1);
@@ -130,7 +131,6 @@
 .bit-prs-ttx,
 .bit-prs-otx {
     overflow: hidden;
-    color: $clr-fg-pri;
     white-space: nowrap;
     text-overflow: ellipsis;
 }
@@ -138,6 +138,7 @@
 .bit-prs-abt {
     left: 50%;
     bottom: 0;
+    z-index: 1;
     border: none;
     display: flex;
     cursor: pointer;
@@ -210,16 +211,14 @@
 }
 
 .bit-prs-s8 {
+    gap: spacing(1);
+
     .bit-prs-pre {
         position: static;
     }
 
     .bit-prs-pic {
         font-size: spacing(1.25);
-    }
-
-    .bit-prs-det {
-        padding-inline-start: spacing(1);
     }
 
     .bit-prs-ptx {
@@ -234,22 +233,12 @@
 }
 
 .bit-prs-s24 {
-    .bit-prs-ima {
-        flex: 0 0 auto;
-        width: spacing(3);
-        height: spacing(3);
-        position: relative;
-        text-align: center;
-    }
+    gap: spacing(1);
 
     .bit-prs-imc {
         aspect-ratio: 1;
         width: spacing(3);
         font-size: spacing(1.75);
-    }
-
-    .bit-prs-det {
-        padding-inline-start: spacing(1);
     }
 
     .bit-prs-stx,
@@ -260,22 +249,12 @@
 }
 
 .bit-prs-s32 {
-    .bit-prs-ima {
-        flex: 0 0 auto;
-        width: spacing(4);
-        height: spacing(4);
-        position: relative;
-        text-align: center;
-    }
+    gap: spacing(1);
 
     .bit-prs-imc {
         aspect-ratio: 1;
         width: spacing(4);
         font-size: spacing(1.75);
-    }
-
-    .bit-prs-det {
-        padding-inline-start: spacing(1);
     }
 
     .bit-prs-stx,
@@ -286,13 +265,7 @@
 }
 
 .bit-prs-s40 {
-    .bit-prs-ima {
-        flex: 0 0 auto;
-        width: spacing(5);
-        height: spacing(5);
-        position: relative;
-        text-align: center;
-    }
+    gap: spacing(1.5);
 
     .bit-prs-imc {
         aspect-ratio: 1;
@@ -304,10 +277,6 @@
         width: spacing(1.5);
         height: spacing(1.5);
         font-size: spacing(0.85);
-    }
-
-    .bit-prs-det {
-        padding-inline-start: spacing(1.5);
     }
 
     .bit-prs-ptx {
@@ -345,13 +314,7 @@
 }
 
 .bit-prs-s48 {
-    .bit-prs-ima {
-        flex: 0 0 auto;
-        width: spacing(6);
-        height: spacing(6);
-        position: relative;
-        text-align: center;
-    }
+    gap: spacing(1.5);
 
     .bit-prs-imc {
         aspect-ratio: 1;
@@ -363,10 +326,6 @@
         width: spacing(1.5);
         height: spacing(1.5);
         font-size: spacing(0.85);
-    }
-
-    .bit-prs-det {
-        padding-inline-start: spacing(1.5);
     }
 
     .bit-prs-ptx {
@@ -403,13 +362,7 @@
 }
 
 .bit-prs-s56 {
-    .bit-prs-ima {
-        flex: 0 0 auto;
-        width: spacing(7);
-        height: spacing(7);
-        position: relative;
-        text-align: center;
-    }
+    gap: spacing(2);
 
     .bit-prs-imc {
         aspect-ratio: 1;
@@ -421,10 +374,6 @@
         width: spacing(2);
         height: spacing(2);
         font-size: spacing(1.25);
-    }
-
-    .bit-prs-det {
-        padding-inline-start: spacing(2);
     }
 
     .bit-prs-ptx {
@@ -461,13 +410,7 @@
 }
 
 .bit-prs-s72 {
-    .bit-prs-ima {
-        flex: 0 0 auto;
-        width: spacing(9);
-        height: spacing(9);
-        position: relative;
-        text-align: center;
-    }
+    gap: spacing(2);
 
     .bit-prs-imc {
         aspect-ratio: 1;
@@ -479,10 +422,6 @@
         width: spacing(2.5);
         height: spacing(2.5);
         font-size: spacing(1.5);
-    }
-
-    .bit-prs-det {
-        padding-inline-start: spacing(2);
     }
 
     .bit-prs-ptx {
@@ -521,13 +460,7 @@
 }
 
 .bit-prs-s100 {
-    .bit-prs-ima {
-        flex: 0 0 auto;
-        position: relative;
-        text-align: center;
-        width: spacing(12.5);
-        height: spacing(12.5);
-    }
+    gap: spacing(2);
 
     .bit-prs-imc {
         aspect-ratio: 1;
@@ -539,10 +472,6 @@
         width: spacing(3.5);
         height: spacing(3.5);
         font-size: spacing(2);
-    }
-
-    .bit-prs-det {
-        padding-inline-start: spacing(2);
     }
 
     .bit-prs-ptx {
@@ -583,13 +512,7 @@
 }
 
 .bit-prs-s120 {
-    .bit-prs-ima {
-        flex: 0 0 auto;
-        width: spacing(15);
-        position: relative;
-        text-align: center;
-        height: spacing(15);
-    }
+    gap: spacing(2);
 
     .bit-prs-imc {
         aspect-ratio: 1;
@@ -601,10 +524,6 @@
         width: spacing(4);
         height: spacing(4);
         font-size: spacing(2.5);
-    }
-
-    .bit-prs-det {
-        padding-inline-start: spacing(2);
     }
 
     .bit-prs-ptx {
