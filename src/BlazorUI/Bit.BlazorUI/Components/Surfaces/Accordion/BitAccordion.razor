@@ -1,4 +1,4 @@
-﻿@namespace Bit.BlazorUI
+@namespace Bit.BlazorUI
 @inherits BitComponentBase
 
 <div @ref="RootElement" @attributes="HtmlAttributes"
@@ -20,6 +20,8 @@
         }
         else
         {
+            var expanderIcon = BitIconInfo.From(ExpanderIcon, ExpanderIconName ?? "ChevronRight bit-ico-r90");
+
             <div style="@Styles?.HeaderContent" class="bit-acd-wrp @Classes?.HeaderContent">
                 <div style="@Styles?.Title" class="bit-acd-ttl @Classes?.Title">
                     @Title
@@ -31,8 +33,12 @@
                     </div>
                 }
             </div>
-            <i style="@Styles?.ChevronDownIcon"
-               class="bit-icon bit-icon--ChevronRight bit-acd-hic@(IsExpanded ? " bit-acd-hex" : "") @Classes?.ChevronDownIcon" />
+            <span style="@Styles?.ExpanderIconWrapper"
+                  class="bit-acd-eiw @Classes?.ExpanderIconWrapper @(IsExpanded ? "bit-ico--r180" : "")">
+                <i aria-hidden="true"
+                   style="@Styles?.ExpanderIcon @(IsExpanded ? Styles?.ExpandedIcon : "")"
+                   class="bit-acd-eic @expanderIcon?.GetCssClasses() @Classes?.ExpanderIcon @(IsExpanded ? Classes?.ExpandedIcon : "")" />
+            </span>
         }
     </button>
 

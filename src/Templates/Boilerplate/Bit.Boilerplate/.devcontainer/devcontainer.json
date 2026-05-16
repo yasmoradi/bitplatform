@@ -1,11 +1,12 @@
 {
     "name": "Boilerplate",
-    "image": "mcr.microsoft.com/dotnet/sdk:10.0.201",
+    "image": "mcr.microsoft.com/dotnet/sdk:10.0.203",
     "hostRequirements": {
         "cpus": 8
     },
-    "onCreateCommand": "dotnet workload install wasm-tools && dotnet dev-certs https --trust",
+    "onCreateCommand": "dotnet workload install wasm-tools",
     "waitFor": "onCreateCommand",
+    "postCreateCommand": "dotnet dev-certs https --trust",
     "customizations": {
         "codespaces": {
             "openFiles": [

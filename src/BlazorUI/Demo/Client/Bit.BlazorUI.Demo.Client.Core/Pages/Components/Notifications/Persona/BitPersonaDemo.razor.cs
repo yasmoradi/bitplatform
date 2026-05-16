@@ -36,6 +36,13 @@ public partial class BitPersonaDemo
         },
         new()
         {
+            Name = "AutoCoinColor",
+            Type = "bool",
+            DefaultValue = "false",
+            Description = "If true, automatically generates a stable coin background color derived from the person's name or initials. Only takes effect when CoinColor is not explicitly set.",
+        },
+        new()
+        {
             Name = "Classes",
             Type = "BitPersonaClassStyles",
             DefaultValue = "null",
@@ -54,12 +61,10 @@ public partial class BitPersonaDemo
         },
         new()
         {
-            Name = "CoinShape",
-            Type = "BitPersonaCoinShape?",
-            DefaultValue = "null",
-            Description = "The shape of the coin.",
-            LinkType = LinkType.Link,
-            Href = "#shape-enum",
+            Name = "Squared",
+            Type = "bool",
+            DefaultValue = "false",
+            Description = "If true, renders the coin with a square shape instead of the default circular shape.",
         },
         new()
         {
@@ -107,6 +112,15 @@ public partial class BitPersonaDemo
         },
         new()
         {
+            Name = "ImageLoading",
+            Type = "BitImageLoading?",
+            DefaultValue = "null",
+            Description = "Specifies the loading behavior of the image. Maps to the HTML loading attribute (e.g., \"lazy\" or \"eager\").",
+            LinkType = LinkType.Link,
+            Href = "#image-loading"
+        },
+        new()
+        {
             Name = "ImageOverlayTemplate",
             Type = "RenderFragment?",
             DefaultValue = "",
@@ -115,9 +129,16 @@ public partial class BitPersonaDemo
         new()
         {
             Name = "ImageOverlayText",
-            Type = "string?",
+            Type = "string",
             DefaultValue = "Edit image",
-            Description = "The user's initials to display in the image area when there is no image.",
+            Description = "The text of the image overlay.",
+        },
+        new()
+        {
+            Name = "ImageSrcSet",
+            Type = "string?",
+            DefaultValue = "null",
+            Description = "A set of image source URLs for different display densities or sizes. Maps to the HTML img srcset attribute.",
         },
         new()
         {
@@ -139,6 +160,20 @@ public partial class BitPersonaDemo
             Type = "EventCallback<MouseEventArgs>",
             DefaultValue = "null",
             Description = "Callback for when the image clicked.",
+        },
+        new()
+        {
+            Name = "OnImageError",
+            Type = "EventCallback<ErrorEventArgs>",
+            DefaultValue = "null",
+            Description = "Callback for when the image fails to load.",
+        },
+        new()
+        {
+            Name = "OnImageLoad",
+            Type = "EventCallback<ProgressEventArgs>",
+            DefaultValue = "null",
+            Description = "Callback for when the image successfully loads.",
         },
         new()
         {
@@ -227,6 +262,22 @@ public partial class BitPersonaDemo
             Type = "bool",
             DefaultValue = "false",
             Description = "If true, show the special coin for unknown persona. It has '?' in place of initials, with static font and background colors.",
+        },
+        new()
+        {
+            Name = "UnknownIcon",
+            Type = "BitIconInfo?",
+            DefaultValue = "null",
+            Description = "Icon for the unknown persona coin using BitIconInfo. Takes precedence over UnknownIconName when both are set.",
+            LinkType = LinkType.Link,
+            Href = "#bit-icon-info",
+        },
+        new()
+        {
+            Name = "UnknownIconName",
+            Type = "string?",
+            DefaultValue = "null",
+            Description = "Icon name for the unknown persona coin.",
         },
         new()
         {
@@ -548,26 +599,6 @@ public partial class BitPersonaDemo
         },
         new()
         {
-            Id = "shape-enum",
-            Name = "BitPersonaCoinShape",
-            Items =
-            [
-                new()
-                {
-                    Name = "Circular",
-                    Description = "Represents the traditional round shape of a coin.",
-                    Value = "",
-                },
-                new()
-                {
-                    Name = "Square",
-                    Description = "Represents a square-shaped coin.",
-                    Value = "",
-                }
-            ]
-        },
-        new()
-        {
             Id = "color-enum",
             Name = "BitColor",
             Description = "Defines the general colors available in the bit BlazorUI.",
@@ -704,12 +735,35 @@ public partial class BitPersonaDemo
                 },
             ]
         },
+        new()
+        {
+            Id = "image-loading",
+            Name = "BitImageLoading",
+            Description = "Represents the img loading attribute values explained here: https://developer.mozilla.org/en-US/docs/Web/API/HTMLImageElement/loading",
+            Items =
+            [
+                new()
+                {
+                    Name= "Eager",
+                    Description="The default behavior, eager tells the browser to load the image as soon as the img element is processed.",
+                    Value="0",
+                },
+                new()
+                {
+                    Name= "Lazy",
+                    Description="Tells the user agent to hold off on loading the image until the browser estimates that it will be needed imminently.",
+                    Value="1",
+                }
+            ]
+        },
     ];
 
 
 
     private int imageClickCount = 0;
     private int actionClickCount = 0;
+    private int imageLoadCount = 0;
+    private int imageErrorCount = 0;
     private bool isDetailsShown = true;
 
     private readonly Dictionary<BitPersonaPresence, BitIconInfo> _icons = new()

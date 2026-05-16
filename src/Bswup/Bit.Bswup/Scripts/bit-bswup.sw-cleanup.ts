@@ -1,4 +1,4 @@
-self['bit-bswup.sw-cleanup version'] = '10.4.3';
+self['bit-bswup.sw-cleanup version'] = '10.4.4';
 
 self.addEventListener('install', e => e.waitUntil(removeBswup()));
 

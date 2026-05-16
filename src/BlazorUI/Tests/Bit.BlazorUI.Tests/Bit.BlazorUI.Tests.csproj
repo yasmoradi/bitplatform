@@ -19,12 +19,18 @@
 
     <ItemGroup>
         <PackageReference Include="bunit.web" Version="1.40.0" />
-        <PackageReference Include="MSTest" Version="4.1.0" />
+        <PackageReference Include="MSTest" Version="4.2.3" />
     </ItemGroup>
 
     <ItemGroup>
         <ProjectReference Include="..\..\Bit.BlazorUI\Bit.BlazorUI.csproj" />
         <ProjectReference Include="..\..\Bit.BlazorUI.Extras\Bit.BlazorUI.Extras.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <None Include="..\..\Bit.BlazorUI\Styles\theme-variables.scss" Link="theme-variables.scss">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
     </ItemGroup>
 
 </Project>

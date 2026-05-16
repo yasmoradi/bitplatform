@@ -1,4 +1,4 @@
-﻿@page "/components/card"
+@page "/components/card"
 
 <PageOutlet Url="components/card"
             Title="Card"
@@ -22,7 +22,23 @@
         </BitCard>
     </DemoExample>
 
-    <DemoExample Title="NoShadow" RazorCode="@example2RazorCode" Id="example2">
+    <DemoExample Title="Elevation" RazorCode="@example2RazorCode" CsharpCode="@example2CsharpCode" Id="example2">
+        <BitSlider @bind-Value="elevation" Min="1" Max="24" Step="1" Label="Elevation" />
+        <br />
+        <div style="padding:5rem">
+            <BitCard Elevation="(int)elevation">
+                <BitStack HorizontalAlign="BitAlignment.Start">
+                    <BitText Typography="BitTypography.H4">bit BlazorUI</BitText>
+                    <BitText Typography="BitTypography.Body1">
+                        bit BlazorUI components are native, easy-to-customize, and ...
+                    </BitText>
+                    <BitLink Href="https://blazorui.bitplatform.dev" Target="_blank">Learn more</BitLink>
+                </BitStack>
+            </BitCard>
+        </div>
+    </DemoExample>
+
+    <DemoExample Title="NoShadow" RazorCode="@example3RazorCode" Id="example3">
         <BitCard NoShadow>
             <BitStack HorizontalAlign="BitAlignment.Start">
                 <BitText Typography="BitTypography.H4">bit BlazorUI</BitText>
@@ -34,7 +50,7 @@
         </BitCard>
     </DemoExample>
 
-    <DemoExample Title="Background" RazorCode="@example3RazorCode" CSharpCode="@example3CSharpCode" Id="example3">
+    <DemoExample Title="Background" RazorCode="@example4RazorCode" CsharpCode="@example4CsharpCode" Id="example4">
         <BitChoiceGroup @bind-Value="backgroundColorKind" Horizontal
                         TItem="BitChoiceGroupOption<BitColorKind>" TValue="BitColorKind">
             <BitChoiceGroupOption Text="Primary" Value="BitColorKind.Primary" />
@@ -56,7 +72,7 @@
         </div>
     </DemoExample>
 
-    <DemoExample Title="Border" RazorCode="@example4RazorCode" CSharpCode="@example4CSharpCode" Id="example4">
+    <DemoExample Title="Border" RazorCode="@example5RazorCode" CsharpCode="@example5CsharpCode" Id="example5">
         <BitChoiceGroup @bind-Value="borderColorKind" Horizontal
                         TItem="BitChoiceGroupOption<BitColorKind>" TValue="BitColorKind">
             <BitChoiceGroupOption Text="Primary" Value="BitColorKind.Primary" />
@@ -76,7 +92,58 @@
         </BitCard>
     </DemoExample>
 
-    <DemoExample Title="FullSize" RazorCode="@example5RazorCode" CSharpCode="@example5CSharpCode" Id="example5">
+    <DemoExample Title="Outlined" RazorCode="@example6RazorCode" Id="example6">
+        <BitCard Outlined>
+            <BitStack HorizontalAlign="BitAlignment.Start">
+                <BitText Typography="BitTypography.H4">bit BlazorUI</BitText>
+                <BitText Typography="BitTypography.Body1">
+                    bit BlazorUI components are native, easy-to-customize, and ...
+                </BitText>
+                <BitLink Href="https://blazorui.bitplatform.dev" Target="_blank">Learn more</BitLink>
+            </BitStack>
+        </BitCard>
+    </DemoExample>
+
+    <DemoExample Title="Square" RazorCode="@example7RazorCode" Id="example7">
+        <BitCard Square Outlined>
+            <BitStack HorizontalAlign="BitAlignment.Start">
+                <BitText Typography="BitTypography.H4">bit BlazorUI</BitText>
+                <BitText Typography="BitTypography.Body1">
+                    bit BlazorUI components are native, easy-to-customize, and ...
+                </BitText>
+                <BitLink Href="https://blazorui.bitplatform.dev" Target="_blank">Learn more</BitLink>
+            </BitStack>
+        </BitCard>
+    </DemoExample>
+
+    <DemoExample Title="NoPadding" RazorCode="@example8RazorCode" Id="example8">
+        <BitCard NoPadding Outlined>
+            <BitStack HorizontalAlign="BitAlignment.Start">
+                <BitText Typography="BitTypography.H4">bit BlazorUI</BitText>
+                <BitText Typography="BitTypography.Body1">
+                    bit BlazorUI components are native, easy-to-customize, and ...
+                </BitText>
+                <BitLink Href="https://blazorui.bitplatform.dev" Target="_blank">Learn more</BitLink>
+            </BitStack>
+        </BitCard>
+    </DemoExample>
+
+    <DemoExample Title="Width & Height" RazorCode="@example9RazorCode" CsharpCode="@example9CsharpCode" Id="example9">
+        <BitSlider @bind-Value="cardWidth" Min="100" Max="600" Step="10" Label="Width (px)" />
+        <BitSlider @bind-Value="cardHeight" Min="100" Max="400" Step="10" Label="Height (px)" />
+        <br />
+        <BitCard Width="@($"{(int)cardWidth}px")" Height="@($"{(int)cardHeight}px")" Outlined Style="overflow:hidden">
+            <BitStack HorizontalAlign="BitAlignment.Start">
+                <BitText Typography="BitTypography.H4">bit BlazorUI</BitText>
+                <BitText Typography="BitTypography.Body1">
+                    bit BlazorUI components are native, easy-to-customize, and ...
+                </BitText>
+                <BitLink Href="https://blazorui.bitplatform.dev" Target="_blank">Learn more</BitLink>
+            </BitStack>
+        </BitCard>
+    </DemoExample>
+
+    <DemoExample Title="FullSize" RazorCode="@example10RazorCode" CsharpCode="@example10CsharpCode" Id="example10">
         <BitChoiceGroup @bind-Value="size" Horizontal
                         TItem="BitChoiceGroupOption<int>" TValue="int">
             <BitChoiceGroupOption Text="FullSize" Value="0" />
@@ -85,7 +152,7 @@
         </BitChoiceGroup>
         <br />
         <div style="padding:2rem;background:gray;height:500px">
-            <BitCard FullSize="size==0" FullWidth="size==1" FullHeight="size==2">
+            <BitCard FullSize="size == 0" FullWidth="size == 1" FullHeight="size == 2">
                 <BitStack HorizontalAlign="BitAlignment.Start">
                     <BitText Typography="BitTypography.H4">bit BlazorUI</BitText>
                     <BitText Typography="BitTypography.Body1">

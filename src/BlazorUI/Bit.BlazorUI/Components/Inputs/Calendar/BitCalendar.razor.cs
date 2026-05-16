@@ -19,6 +19,10 @@ public partial class BitCalendar : BitInputBase<DateTimeOffset?>
     private bool _showYearPicker;
     private bool _showTimePicker;
     private bool _showMonthPicker;
+    private bool _showEventModal;
+    private DateOnly _eventModalDate;
+    private IReadOnlyList<BitCalendarEvent> _eventModalEvents = [];
+    private Dictionary<DateOnly, List<BitCalendarEvent>> _eventsByDate = [];
     private int _yearPickerEndYear;
     private int _yearPickerStartYear;
     private string _monthTitle = string.Empty;
@@ -120,6 +124,21 @@ public partial class BitCalendar : BitInputBase<DateTimeOffset?>
     /// Used to customize how content inside the day cell is rendered.
     /// </summary>
     [Parameter] public RenderFragment<DateTimeOffset>? DayCellTemplate { get; set; }
+
+    /// <summary>
+    /// The list of events to display on calendar days.
+    /// </summary>
+    [Parameter] public IEnumerable<BitCalendarEvent>? Events { get; set; }
+
+    /// <summary>
+    /// The text shown before the start time of an event when only a start time is present (e.g. "From 09:00").
+    /// </summary>
+    [Parameter] public string EventTimeFromText { get; set; } = "From";
+
+    /// <summary>
+    /// The text shown before the end time of an event when only an end time is present (e.g. "Until 17:00").
+    /// </summary>
+    [Parameter] public string EventTimeUntilText { get; set; } = "Until";
 
     /// <summary>
     /// The title of the Go to next month button (tooltip).
@@ -490,6 +509,13 @@ public partial class BitCalendar : BitInputBase<DateTimeOffset?>
         OnSetParameters();
 
         base.OnInitialized();
+    }
+
+    protected override void OnParametersSet()
+    {
+        base.OnParametersSet();
+
+        BuildEventsLookup();
     }
 
     protected override bool TryParseValueFromString(string? value, [MaybeNullWhen(false)] out DateTimeOffset? result, [NotNullWhen(false)] out string? validationErrorMessage)
@@ -995,6 +1021,59 @@ public partial class BitCalendar : BitInputBase<DateTimeOffset?>
         CurrentValue = new(date, _timeZone.GetUtcOffset(date));
     }
 
+    private void BuildEventsLookup()
+    {
+        _eventsByDate = Events is null
+            ? []
+            : Events.GroupBy(e => e.Date).ToDictionary(g => g.Key, g => g.ToList());
+    }
+
+    private IReadOnlyList<BitCalendarEvent> GetDayEvents(DateTime date)
+    {
+        var dateOnly = DateOnly.FromDateTime(date);
+
+        return _eventsByDate.TryGetValue(dateOnly, out var list) ? list : Array.Empty<BitCalendarEvent>();
+    }
+
+    private string FormatEventTime(TimeOnly time)
+    {
+        var format = TimeFormat == BitTimeFormat.TwelveHours ? "h:mm tt" : "HH:mm";
+        return time.ToString(format, _culture);
+    }
+
+    private string FormatEventModalDate(DateOnly date)
+    {
+        return date.ToDateTime(TimeOnly.MinValue).ToString(DateFormat ?? _culture.DateTimeFormat.ShortDatePattern, _culture);
+    }
+
+    private string GetEventTooltip(IReadOnlyList<BitCalendarEvent> events)
+    {
+        return string.Join("\n", events.Select(e =>
+            e.StartTime.HasValue ? $"{e.Title} ({FormatEventTime(e.StartTime.Value)})" : e.Title));
+    }
+
+    private async Task HandleDayClick(DateTime date, IReadOnlyList<BitCalendarEvent> events)
+    {
+        if (events.Count > 0)
+        {
+            OpenEventModal(date, events);
+        }
+        
+        await SelectDate(date);
+    }
+
+    private void OpenEventModal(DateTime date, IReadOnlyList<BitCalendarEvent> events)
+    {
+        _eventModalDate = DateOnly.FromDateTime(date);
+        _eventModalEvents = events;
+        _showEventModal = true;
+    }
+
+    private void CloseEventModal()
+    {
+        _showEventModal = false;
+    }
+
     private DateTime GetDateTime(DateTimeOffset dateTimeOffset)
     {
         return TimeZoneInfo.ConvertTimeFromUtc(dateTimeOffset.UtcDateTime, _timeZone);
@@ -1061,19 +1140,23 @@ public partial class BitCalendar : BitInputBase<DateTimeOffset?>
         ResetCts();
 
         var cts = _cancellationTokenSource;
-        await Task.Run(async () =>
+        try
         {
-            await InvokeAsync(async () =>
+            await Task.Run(async () =>
             {
-                await Task.Delay(400);
-                await ContinuousChangeTime(isNext, isHour, cts);
-            });
-        }, cts.Token);
+                await InvokeAsync(async () =>
+                {
+                    await Task.Delay(400);
+                    await ContinuousChangeTime(isNext, isHour, cts);
+                });
+            }, cts.Token);
+        }
+        catch (OperationCanceledException) { }
     }
 
     private async Task ContinuousChangeTime(bool isNext, bool isHour, CancellationTokenSource cts)
     {
-        if (cts.IsCancellationRequested) return;
+        if (cts.IsCancellationRequested || IsDisposed) return;
 
         ChangeTime(isNext, isHour);
 
@@ -1102,6 +1185,8 @@ public partial class BitCalendar : BitInputBase<DateTimeOffset?>
 
     private void ResetCts()
     {
+        if (IsDisposed) return;
+
         _cancellationTokenSource?.Cancel();
         _cancellationTokenSource?.Dispose();
         _cancellationTokenSource = new();
@@ -1195,6 +1280,7 @@ public partial class BitCalendar : BitInputBase<DateTimeOffset?>
     {
         if (IsDisposed || disposing is false) return;
 
+        _cancellationTokenSource?.Cancel();
         _cancellationTokenSource?.Dispose();
         OnValueChanged -= HandleOnValueChanged;
 

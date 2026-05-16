@@ -537,17 +537,24 @@ public partial class BitNumberField<[DynamicallyAccessedMembers(DynamicallyAcces
         }
 
         await ChangeValueAndInvokeEvents(isIncrement);
+
+        if (IsDisposed) return;
+
         ResetCts();
 
         var cts = _continuousChangeValueCts;
-        await Task.Run(async () =>
+        try
         {
-            await InvokeAsync(async () =>
+            await Task.Run(async () =>
             {
-                await Task.Delay(400);
-                await ContinuousChangeValue(isIncrement, cts);
-            });
-        }, cts.Token);
+                await InvokeAsync(async () =>
+                {
+                    await Task.Delay(400);
+                    await ContinuousChangeValue(isIncrement, cts);
+                });
+            }, cts.Token);
+        }
+        catch (OperationCanceledException) { }
     }
 
     private async Task HandleOnPointerUpOrOut()
@@ -585,9 +592,11 @@ public partial class BitNumberField<[DynamicallyAccessedMembers(DynamicallyAcces
 
     private async Task ContinuousChangeValue(bool isIncrement, CancellationTokenSource cts)
     {
-        if (cts.IsCancellationRequested) return;
+        if (cts.IsCancellationRequested || IsDisposed) return;
 
         await ChangeValueAndInvokeEvents(isIncrement);
+
+        if (IsDisposed) return;
 
         StateHasChanged();
 
@@ -657,6 +666,8 @@ public partial class BitNumberField<[DynamicallyAccessedMembers(DynamicallyAcces
 
     private void ResetCts()
     {
+        if (IsDisposed) return;
+
         _continuousChangeValueCts?.Cancel();
         _continuousChangeValueCts?.Dispose();
         _continuousChangeValueCts = new();
@@ -768,15 +779,15 @@ public partial class BitNumberField<[DynamicallyAccessedMembers(DynamicallyAcces
     {
         if (value is double doubleValue)
         {
-            return (TValue)Convert.ChangeType(Math.Round(doubleValue, _precision), typeof(TValue));
+            return (TValue)Convert.ChangeType(Math.Round(doubleValue, _precision), _typeOfValue);
         }
         else if (value is float floatValue)
         {
-            return (TValue)Convert.ChangeType(Math.Round(floatValue, _precision), typeof(TValue));
+            return (TValue)Convert.ChangeType(Math.Round(floatValue, _precision), _typeOfValue);
         }
         else if (value is decimal decimalValue)
         {
-            return (TValue)Convert.ChangeType(Math.Round(decimalValue, _precision), typeof(TValue));
+            return (TValue)Convert.ChangeType(Math.Round(decimalValue, _precision), _typeOfValue);
         }
 
         return value;
@@ -829,6 +840,7 @@ public partial class BitNumberField<[DynamicallyAccessedMembers(DynamicallyAcces
 
         OnValueChanged -= HandleOnValueChanged;
 
+        _continuousChangeValueCts?.Cancel();
         _continuousChangeValueCts?.Dispose();
 
         await base.DisposeAsync(disposing);

@@ -67,11 +67,7 @@ public static partial class Program
 
         builder.AddServerSharedServices();
 
-        builder.AddDefaultHealthChecks()
-            .AddDbContextCheck<AppDbContext>(tags: ["live"])
-            .AddHangfire(setup => setup.MinimumAvailableServers = 1, tags: ["live"])
-            .AddCheck<AppStorageHealthCheck>("storage", tags: ["live"]);
-        // TODO: Sms, Email, Push notification, AI, Google reCaptcha, Cloudflare
+        builder.AddServerApiHealthChecks();
 
         ServerApiSettings appSettings = new();
         configuration.Bind(appSettings);
@@ -178,7 +174,7 @@ public static partial class Program
         //#if (redis == true)
         services.AddTransient(sp => new DistributedLockFactory((string lockKey) =>
         {
-            return new Medallion.Threading.Redis.RedisDistributedLock(lockKey, sp.GetRequiredService<IConnectionMultiplexer>().GetDatabase());
+            return new Medallion.Threading.Redis.RedisDistributedLock(lockKey, sp.GetRequiredKeyedService<IConnectionMultiplexer>("redis-persistent").GetDatabase());
         }));
         //#else
         services.AddTransient(sp => new DistributedLockFactory((string lockKey) =>
@@ -285,7 +281,7 @@ public static partial class Program
         else
         {
             // Use Redis as SignalR backplane for scaling out across multiple server instances
-            signalRBuilder.AddStackExchangeRedis(configuration.GetRequiredConnectionString("redis-cache"), options =>
+            signalRBuilder.AddStackExchangeRedis(options =>
             {
                 options.Configuration.ChannelPrefix = RedisChannel.Literal("Boilerplate:SignalR:");
             });
@@ -570,7 +566,7 @@ public static partial class Program
             if (appSettings.Hangfire?.UseIsolatedStorage is not true)
             {
                 //#if (redis == true)
-                hangfireConfiguration.UseRedisStorage(sp.GetRequiredService<IConnectionMultiplexer>(), new RedisStorageOptions
+                hangfireConfiguration.UseRedisStorage(sp.GetRequiredKeyedService<IConnectionMultiplexer>("redis-persistent"), new RedisStorageOptions
                 {
                     Prefix = "Boilerplate:Hangfire:",
                     Db = 1, // Use a dedicated Redis database for Hangfire
@@ -761,5 +757,49 @@ public static partial class Program
                 return part[$"{key}=".Length..];
         }
         return defaultValue ?? throw new ArgumentException($"Invalid connection string: '{key}' not found.");
+    }
+    
+    private static WebApplicationBuilder AddServerApiHealthChecks(this WebApplicationBuilder builder)
+    {
+        var configuration = builder.Configuration;
+
+        ServerApiSettings appSettings = new();
+        configuration.Bind(appSettings);
+
+        var healthChecksBuilder = builder.AddDefaultHealthChecks()
+            .AddDbContextCheck<AppDbContext>(tags: ["live"])
+            .AddHangfire(setup => setup.MinimumAvailableServers = 1, tags: ["live"])
+            .AddCheck<UserProfileImagesStorageHealthCheck>("userProfileImages", tags: ["live"])
+            .AddCheck<TwilioHealthCheck>("sms", tags: ["live"]);
+
+        //#if (cloudflare == true)
+        // Cloudflare Cache Purge API
+        if (appSettings.Cloudflare?.Configured is true)
+        {
+            var cloudflareApiToken = appSettings.Cloudflare.ApiToken;
+            healthChecksBuilder.AddUrlGroup(
+                new Uri($"https://api.cloudflare.com/client/v4/zones/{appSettings.Cloudflare.ZoneId}"),
+                name: "cloudflare",
+                tags: ["ready"],
+                configureClient: (_, client) =>
+                {
+                    client.Timeout = TimeSpan.FromSeconds(10);
+                    client.DefaultRequestHeaders.Add("Authorization", $"Bearer {cloudflareApiToken}");
+                });
+        }
+        //#endif
+
+        var keycloakBaseUrl = configuration["KEYCLOAK_HTTP"] ?? configuration["Authentication:Keycloak:KeycloakUrl"];
+        if (string.IsNullOrEmpty(keycloakBaseUrl) is false)
+        {
+            var realm = configuration["Authentication:Keycloak:Realm"] ?? "dev";
+            healthChecksBuilder.AddUrlGroup(
+                new Uri($"{keycloakBaseUrl.TrimEnd('/')}/realms/{realm}/.well-known/openid-configuration"),
+                name: "keycloakIdentity",
+                tags: ["ready"],
+                configureClient: (_, client) => client.Timeout = TimeSpan.FromSeconds(10));
+        }
+
+        return builder;
     }
 }

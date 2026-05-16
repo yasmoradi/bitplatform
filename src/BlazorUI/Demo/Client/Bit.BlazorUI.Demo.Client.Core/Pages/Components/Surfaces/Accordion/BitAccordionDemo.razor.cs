@@ -1,4 +1,4 @@
-namespace Bit.BlazorUI.Demo.Client.Core.Pages.Components.Surfaces.Accordion;
+﻿namespace Bit.BlazorUI.Demo.Client.Core.Pages.Components.Surfaces.Accordion;
 
 public partial class BitAccordionDemo
 {
@@ -58,6 +58,20 @@ public partial class BitAccordionDemo
             Type = "string?",
             DefaultValue = "null",
             Description = "A short description in the header of the accordion."
+        },
+        new()
+        {
+            Name = "ExpanderIcon",
+            Type = "BitIconInfo?",
+            DefaultValue = "null",
+            Description = "Gets or sets the icon to display as expander using custom CSS classes for external icon libraries. Takes precedence over ExpanderIconName when both are set. Defaults to the ChevronRight icon if neither property is set."
+        },
+        new()
+        {
+            Name = "ExpanderIconName",
+            Type = "string?",
+            DefaultValue = "null",
+            Description = "Gets or sets the name of the icon to display as expander from the built-in Fluent UI icons. Defaults to ChevronRight if not set."
         },
         new()
         {
@@ -199,10 +213,24 @@ public partial class BitAccordionDemo
                 },
                 new()
                 {
-                    Name = "ChevronDownIcon",
+                    Name = "ExpanderIconWrapper",
                     Type = "string?",
                     DefaultValue = "null",
-                    Description = "Custom CSS classes/styles for the chevron down icon of the BitAccordion."
+                    Description = "Custom CSS classes/styles for the expander icon wrapper of the BitAccordion."
+                },
+                new()
+                {
+                    Name = "ExpanderIcon",
+                    Type = "string?",
+                    DefaultValue = "null",
+                    Description = "Custom CSS classes/styles for the expander icon of the BitAccordion."
+                },
+                new()
+                {
+                    Name = "ExpandedIcon",
+                    Type = "string?",
+                    DefaultValue = "null",
+                    Description = "Custom CSS classes/styles for the icon of the BitAccordion in expanded state."
                 },
                 new()
                 {
@@ -458,6 +486,53 @@ private bool AccordionToggleIsExpanded;";
 </BitAccordion>";
 
     private readonly string example10RazorCode = @"
+<BitAccordion Title=""ExpanderIconName"" ExpanderIconName=""ChevronDown"">
+    Every story starts with a blank canvas, a quiet space waiting to be filled with ideas, emotions, and dreams.
+</BitAccordion>
+
+<BitAccordion Title=""ExpanderIcon"" ExpanderIcon=""@BitIconInfo.Bit(""ChevronDownEnd"")"">
+    Every story starts with a blank canvas, a quiet space waiting to be filled with ideas, emotions, and dreams.
+</BitAccordion>";
+
+    private readonly string example11RazorCode = @"
+<link rel=""stylesheet"" href=""https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css"" />
+
+<BitAccordion Title=""Chevron Down"" ExpanderIcon=""@(""fa-solid fa-chevron-down"")"">
+    ExpanderIcon=@@(""fa-solid fa-chevron-down"")
+</BitAccordion>
+        
+<BitAccordion Title=""Chevron Right"" ExpanderIcon=""@BitIconInfo.Css(""fa-solid fa-chevron-right"")"">
+    ExpanderIcon=""@@BitIconInfo.Css(""fa-solid fa-chevron-right"")""
+</BitAccordion>
+        
+<BitAccordion Title=""Angle Down"" ExpanderIcon=""@BitIconInfo.Fa(""solid angle-down"")"">
+    ExpanderIcon=""@@BitIconInfo.Fa(""solid angle-down"")""
+</BitAccordion>
+        
+<BitAccordion Title=""Caret Down"" ExpanderIcon=""@BitIconInfo.Fa(""solid caret-down"")"">
+    ExpanderIcon=""@@BitIconInfo.Fa(""solid caret-down"")""
+</BitAccordion>
+
+
+<link rel=""stylesheet"" href=""https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"" />
+
+<BitAccordion Title=""Chevron Down"" ExpanderIcon=""@(""bi bi-chevron-down"")"">
+    ExpanderIcon=@@(""bi bi-chevron-down"")
+</BitAccordion>
+        
+<BitAccordion Title=""Chevron Right"" ExpanderIcon=""@BitIconInfo.Css(""bi bi-chevron-right"")"">
+    ExpanderIcon=""@@BitIconInfo.Css(""bi bi-chevron-right"")""
+</BitAccordion>
+        
+<BitAccordion Title=""Arrow Down"" ExpanderIcon=""@BitIconInfo.Bi(""arrow-down"")"">
+    ExpanderIcon=""@@BitIconInfo.Bi(""arrow-down"")""
+</BitAccordion>
+        
+<BitAccordion Title=""Caret Down Fill"" ExpanderIcon=""@BitIconInfo.Bi(""caret-down-fill"")"">
+    ExpanderIcon=""@@BitIconInfo.Bi(""caret-down-fill"")""
+</BitAccordion>";
+
+    private readonly string example12RazorCode = @"
 <BitAccordion Dir=""BitDir.Rtl"" 
               Title=""تنظیمات"" 
               Description=""من یک آکاردئون هستم!"">

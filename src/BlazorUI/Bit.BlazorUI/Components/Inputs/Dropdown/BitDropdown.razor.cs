@@ -1,11 +1,12 @@
-using System.Text;
+﻿using System.Text;
 using System.Linq.Expressions;
 using System.Diagnostics.CodeAnalysis;
 
 namespace Bit.BlazorUI;
 
 /// <summary>
-/// A dropdown is a list in which the selected item is always visible while other items are visible on demand by clicking a dropdown button. Dropdowns are typically used for forms.
+/// A dropdown is a list in which the selected item is always visible while other items are 
+/// visible on demand by clicking a dropdown button. Dropdowns are typically used for forms.
 /// </summary>
 public partial class BitDropdown<TItem, TValue> : BitInputBase<TValue> where TItem : class, new()
 {
@@ -24,6 +25,7 @@ public partial class BitDropdown<TItem, TValue> : BitInputBase<TValue> where TIt
     private string _headerId = string.Empty;
     private string _footerId = string.Empty;
     private string _calloutId = string.Empty;
+    private string _overlayId = string.Empty;
     private string _dropdownId = string.Empty;
 
     private ElementReference _searchInputRef;
@@ -104,6 +106,12 @@ public partial class BitDropdown<TItem, TValue> : BitInputBase<TValue> where TIt
     /// Custom CSS classes for different parts of the BitDropdown.
     /// </summary>
     [Parameter] public BitDropdownClassStyles? Classes { get; set; }
+
+    /// <summary>
+    /// The general color of the dropdown.
+    /// </summary>
+    [Parameter, ResetClassBuilder]
+    public BitColor? Color { get; set; }
 
     /// <summary>
     /// The icon of the clear button of the dropdown.
@@ -195,6 +203,20 @@ public partial class BitDropdown<TItem, TValue> : BitInputBase<TValue> where TIt
     [Parameter, TwoWayBound]
     [CallOnSet(nameof(OnSetIsOpen))]
     public bool IsOpen { get; set; }
+
+    /// <summary>
+    /// The icon of the check mark in the multi-select items.
+    /// Takes precedence over <see cref="ItemCheckIconName"/> when both are set.
+    /// Use this property to render icons from external libraries like FontAwesome, Material Icons, or Bootstrap Icons.
+    /// For built-in Fluent UI icons, use <see cref="ItemCheckIconName"/> instead.
+    /// </summary>
+    [Parameter] public BitIconInfo? ItemCheckIcon { get; set; }
+
+    /// <summary>
+    /// The icon name of the check mark in the multi-select items from the Fluent UI icon set.
+    /// For external icon libraries, use <see cref="ItemCheckIcon"/> instead.
+    /// </summary>
+    [Parameter] public string? ItemCheckIconName { get; set; }
 
     /// <summary>
     /// The list of items to display in the callout.
@@ -549,6 +571,7 @@ public partial class BitDropdown<TItem, TValue> : BitInputBase<TValue> where TIt
 
     internal async Task HandleOnItemClick(TItem item)
     {
+        if (ReadOnly) return;
         if (GetItemType(item) != BitDropdownItemType.Normal) return;
         if (IsEnabled is false || GetIsEnabled(item) is false) return;
         if (IsOpenHasBeenSet && IsOpenChanged.HasDelegate is false) return;
@@ -904,6 +927,8 @@ public partial class BitDropdown<TItem, TValue> : BitInputBase<TValue> where TIt
     {
         ClassBuilder.Register(() => Classes?.Root);
 
+        ClassBuilder.Register(() => GetColorClass());
+
         ClassBuilder.Register(() => Required ? "bit-drp-req" : string.Empty);
 
         ClassBuilder.Register(() => _selectedItems?.Count > 0 ? "bit-drp-hvl" : string.Empty);
@@ -926,6 +951,7 @@ public partial class BitDropdown<TItem, TValue> : BitInputBase<TValue> where TIt
     {
         _dropdownId = $"Dropdown-{UniqueId}";
         _calloutId = $"{_dropdownId}-callout";
+        _overlayId = $"{_dropdownId}-overlay";
         _scrollContainerId = $"{_dropdownId}-scroll-container";
         _headerId = $"{_dropdownId}-header";
         _footerId = $"{_dropdownId}-footer";
@@ -1012,6 +1038,9 @@ public partial class BitDropdown<TItem, TValue> : BitInputBase<TValue> where TIt
 
     private async Task AddOrRemoveSelectedItem(TItem? item, bool addDynamic = false)
     {
+        if (ReadOnly) return;
+        if (IsEnabled is false) return;
+
         if (item is null) return;
 
         if (MultiSelect)
@@ -1162,13 +1191,25 @@ public partial class BitDropdown<TItem, TValue> : BitInputBase<TValue> where TIt
         await FocusOnSearchBox();
     }
 
-    private void HandleOnValueChanged(object? sender, EventArgs args) => UpdateSelectedItemsFromValues();
+    private void HandleOnValueChanged(object? sender, EventArgs args)
+    {
+        UpdateSelectedItemsFromValues();
+    }
 
-    private void HandleSearchBoxFocusIn() => _inputSearchHasFocus = true;
+    private void HandleSearchBoxFocusIn()
+    {
+        _inputSearchHasFocus = true;
+    }
 
-    private void HandleSearchBoxFocusOut() => _inputSearchHasFocus = false;
+    private void HandleSearchBoxFocusOut()
+    {
+        _inputSearchHasFocus = false;
+    }
 
-    private Task HandleSearchBoxOnClear() => ClearSearchBox();
+    private Task HandleSearchBoxOnClear()
+    {
+        return ClearSearchBox();
+    }
 
     private async Task HandleFilterChange(ChangeEventArgs e)
     {
@@ -1210,8 +1251,9 @@ public partial class BitDropdown<TItem, TValue> : BitInputBase<TValue> where TIt
 
     private async Task ClearComboBoxInput()
     {
-        if (IsEnabled is false) return;
+        if (ReadOnly) return;
         if (Combo is false) return;
+        if (IsEnabled is false) return;
         if (_searchText.HasNoValue()) return;
 
         _searchText = null;
@@ -1257,7 +1299,10 @@ public partial class BitDropdown<TItem, TValue> : BitInputBase<TValue> where TIt
         return className.ToString();
     }
 
-    private string GetDropdownAriaLabelledby => Label.HasValue() ? $"{_labelId} {_dropdownTextContainerId}" : _dropdownTextContainerId;
+    private string GetDropdownAriaLabelledby()
+    {
+        return Label.HasValue() ? $"{_labelId} {_dropdownTextContainerId}" : _dropdownTextContainerId;
+    }
 
     private async Task SearchVirtualized()
     {
@@ -1269,6 +1314,7 @@ public partial class BitDropdown<TItem, TValue> : BitInputBase<TValue> where TIt
 
     private async Task HandleOnClearClick()
     {
+        if (ReadOnly) return;
         if (IsEnabled is false) return;
 
         if (MultiSelect)
@@ -1292,6 +1338,7 @@ public partial class BitDropdown<TItem, TValue> : BitInputBase<TValue> where TIt
 
     private async Task HandleOnAddItemComboClick()
     {
+        if (ReadOnly) return;
         if (IsEnabled is false || InvalidValueBinding()) return;
 
         await AddDynamicItem();
@@ -1318,6 +1365,7 @@ public partial class BitDropdown<TItem, TValue> : BitInputBase<TValue> where TIt
             component: null,
             calloutId: _calloutId,
             callout: null,
+            overlayId: _overlayId,
             isCalloutOpen: IsOpen,
             responsiveMode: Responsive ? BitResponsiveMode.Panel : BitResponsiveMode.None,
             dropDirection: DropDirection,
@@ -1421,10 +1469,14 @@ public partial class BitDropdown<TItem, TValue> : BitInputBase<TValue> where TIt
         }
     }
 
-    private Task HandleOnClickUnselectItem(TItem? item) => UnselectItem(item);
+    private Task HandleOnClickUnselectItem(TItem? item)
+    {
+        return UnselectItem(item);
+    }
 
     private async Task HandleOnComboInput(ChangeEventArgs e)
     {
+        if (ReadOnly) return;
         if (IsEnabled is false || InvalidValueBinding()) return;
 
         _searchText = e.Value?.ToString();
@@ -1445,6 +1497,9 @@ public partial class BitDropdown<TItem, TValue> : BitInputBase<TValue> where TIt
 
     private async Task RemoveLastSelectedItem()
     {
+        if (ReadOnly) return;
+        if (IsEnabled is false) return;
+
         if (_selectedItems.Any() is false) return;
 
         if (MultiSelect)
@@ -1460,6 +1515,9 @@ public partial class BitDropdown<TItem, TValue> : BitInputBase<TValue> where TIt
 
     private async Task AddDynamicItem()
     {
+        if (ReadOnly) return;
+        if (IsEnabled is false) return;
+
         if (_searchText.HasNoValue()) return;
 
         if (_selectedItems.Count > 0)
@@ -1610,10 +1668,40 @@ public partial class BitDropdown<TItem, TValue> : BitInputBase<TValue> where TIt
             classes.Add("bit-drp-res");
         }
 
+        if (Dir is BitDir.Rtl)
+        {
+            classes.Add("bit-drp-rtl");
+        }
+
+        classes.Add(GetColorClass());
+
         return string.Join(' ', classes).Trim();
     }
 
-
+    private string GetColorClass()
+    {
+        return Color switch
+        {
+            BitColor.Primary => "bit-drp-pri",
+            BitColor.Secondary => "bit-drp-sec",
+            BitColor.Tertiary => "bit-drp-ter",
+            BitColor.Info => "bit-drp-inf",
+            BitColor.Success => "bit-drp-suc",
+            BitColor.Warning => "bit-drp-wrn",
+            BitColor.SevereWarning => "bit-drp-swr",
+            BitColor.Error => "bit-drp-err",
+            BitColor.PrimaryBackground => "bit-drp-pbg",
+            BitColor.SecondaryBackground => "bit-drp-sbg",
+            BitColor.TertiaryBackground => "bit-drp-tbg",
+            BitColor.PrimaryForeground => "bit-drp-pfg",
+            BitColor.SecondaryForeground => "bit-drp-sfg",
+            BitColor.TertiaryForeground => "bit-drp-tfg",
+            BitColor.PrimaryBorder => "bit-drp-pbr",
+            BitColor.SecondaryBorder => "bit-drp-sbr",
+            BitColor.TertiaryBorder => "bit-drp-tbr",
+            _ => "bit-drp-pri"
+        };
+    }
 
     protected override async ValueTask DisposeAsync(bool disposing)
     {

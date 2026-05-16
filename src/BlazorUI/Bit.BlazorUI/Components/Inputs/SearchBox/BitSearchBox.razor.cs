@@ -13,6 +13,7 @@ public partial class BitSearchBox : BitTextInputBase<string?>
     private int _selectedIndex = -1;
     private string _inputId = string.Empty;
     private string _calloutId = string.Empty;
+    private string _overlayId = string.Empty;
     private List<string> _viewSuggestedItems = [];
     private string _scrollContainerId = string.Empty;
     private CancellationTokenSource? _cancellationTokenSource;
@@ -351,6 +352,7 @@ public partial class BitSearchBox : BitTextInputBase<string?>
     protected override async Task OnInitializedAsync()
     {
         _calloutId = $"BitSearchBox-{UniqueId}-callout";
+        _overlayId = $"BitSearchBox-{UniqueId}-overlay";
         _scrollContainerId = $"BitSearchBox-{UniqueId}-scroll-container";
         _inputId = $"BitSearchBox-{UniqueId}-input";
 
@@ -529,7 +531,11 @@ public partial class BitSearchBox : BitTextInputBase<string?>
             _cancellationTokenSource?.Cancel();
             _cancellationTokenSource?.Dispose();
             _cancellationTokenSource = new();
-            _viewSuggestedItems = [.. (await SuggestItemsProvider(new(CurrentValue, MaxSuggestCount, _cancellationTokenSource.Token))).Take(MaxSuggestCount)];
+            try
+            {
+                _viewSuggestedItems = [.. (await SuggestItemsProvider(new(CurrentValue, MaxSuggestCount, _cancellationTokenSource.Token))).Take(MaxSuggestCount)];
+            }
+            catch (OperationCanceledException) { }
         }
         else if (SuggestItems is not null)
         {
@@ -595,6 +601,7 @@ public partial class BitSearchBox : BitTextInputBase<string?>
             component: null,
             calloutId: _calloutId,
             callout: null,
+            overlayId: _overlayId,
             isCalloutOpen: _isOpen,
             responsiveMode: BitResponsiveMode.None,
             dropDirection: BitDropDirection.TopAndBottom,
@@ -659,6 +666,7 @@ public partial class BitSearchBox : BitTextInputBase<string?>
 
         await base.DisposeAsync(disposing);
 
+        _cancellationTokenSource?.Cancel();
         _cancellationTokenSource?.Dispose();
 
         OnValueChanged -= HandleOnValueChanged;

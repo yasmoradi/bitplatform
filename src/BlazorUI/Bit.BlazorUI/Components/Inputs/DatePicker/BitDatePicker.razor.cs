@@ -35,6 +35,7 @@ public partial class BitDatePicker : BitInputBase<DateTimeOffset?>
     private string? _labelId;
     private string? _inputId;
     private string _calloutId = string.Empty;
+    private string _overlayId = string.Empty;
     private string _datePickerId = string.Empty;
     private ElementReference _inputTimeHourRef = default!;
     private ElementReference _inputTimeMinuteRef = default!;
@@ -685,7 +686,7 @@ public partial class BitDatePicker : BitInputBase<DateTimeOffset?>
 
 
 
-    protected override string RootElementClass { get; } = "bit-dtp";
+    protected override string RootElementClass => "bit-dtp";
 
     protected override void RegisterCssClasses()
     {
@@ -718,6 +719,7 @@ public partial class BitDatePicker : BitInputBase<DateTimeOffset?>
         _datePickerId = $"DatePicker-{UniqueId}";
         _labelId = $"{_datePickerId}-label";
         _calloutId = $"{_datePickerId}-callout";
+        _overlayId = $"{_datePickerId}-overlay";
         _inputId = $"{_datePickerId}-input";
 
         OnValueChanged += HandleOnValueChanged;
@@ -1057,17 +1059,6 @@ public partial class BitDatePicker : BitInputBase<DateTimeOffset?>
         GenerateCalendarData(DateTime.Now);
     }
 
-    private async Task HandleGoToNow()
-    {
-        if (ReadOnly) return;
-        if (IsEnabled is false) return;
-
-        _hour = DateTime.Now.Hour;
-        _minute = DateTime.Now.Minute;
-
-        await UpdateCurrentValue();
-    }
-
     private void GenerateCalendarData(DateTime dateTime)
     {
         _currentMonth = _culture.Calendar.GetMonth(dateTime);
@@ -1208,6 +1199,8 @@ public partial class BitDatePicker : BitInputBase<DateTimeOffset?>
 
     private bool CanChangeMonth(bool isNext)
     {
+        if (IsEnabled is false) return false;
+
         if (isNext && MaxDate.HasValue)
         {
             var MaxDateYear = _culture.Calendar.GetYear(MaxDate.Value.DateTime);
@@ -1230,6 +1223,8 @@ public partial class BitDatePicker : BitInputBase<DateTimeOffset?>
 
     private bool CanChangeYear(bool isNext)
     {
+        if (IsEnabled is false) return false;
+
         return (
                 (isNext && MaxDate.HasValue && _culture.Calendar.GetYear(MaxDate.Value.DateTime) == _currentYear) ||
                 (isNext is false && MinDate.HasValue && _culture.Calendar.GetYear(MinDate.Value.DateTime) == _currentYear)
@@ -1462,24 +1457,33 @@ public partial class BitDatePicker : BitInputBase<DateTimeOffset?>
         if (IsEnabled is false) return;
 
         await ChangeTime(isNext, isHour);
+
+        if (IsDisposed) return;
+
         ResetCts();
 
         var cts = _cancellationTokenSource;
-        await Task.Run(async () =>
+        try
         {
-            await InvokeAsync(async () =>
+            await Task.Run(async () =>
             {
-                await Task.Delay(400);
-                await ContinuousChangeTime(isNext, isHour, cts);
-            });
-        }, cts.Token);
+                await InvokeAsync(async () =>
+                {
+                    await Task.Delay(400);
+                    await ContinuousChangeTime(isNext, isHour, cts);
+                });
+            }, cts.Token);
+        }
+        catch (OperationCanceledException) { }
     }
 
     private async Task ContinuousChangeTime(bool isNext, bool isHour, CancellationTokenSource cts)
     {
-        if (cts.IsCancellationRequested) return;
+        if (cts.IsCancellationRequested || IsDisposed) return;
 
         await ChangeTime(isNext, isHour);
+
+        if (IsDisposed) return;
 
         StateHasChanged();
 
@@ -1506,6 +1510,8 @@ public partial class BitDatePicker : BitInputBase<DateTimeOffset?>
 
     private void ResetCts()
     {
+        if (IsDisposed) return;
+
         _cancellationTokenSource?.Cancel();
         _cancellationTokenSource?.Dispose();
         _cancellationTokenSource = new();
@@ -1602,6 +1608,7 @@ public partial class BitDatePicker : BitInputBase<DateTimeOffset?>
             component: null,
             calloutId: _calloutId,
             callout: null,
+            overlayId: _overlayId,
             isCalloutOpen: IsOpen,
             responsiveMode: Responsive ? BitResponsiveMode.Top : BitResponsiveMode.None,
             dropDirection: BitDropDirection.TopAndBottom,
@@ -1624,12 +1631,33 @@ public partial class BitDatePicker : BitInputBase<DateTimeOffset?>
             classes.Add(Classes.Callout);
         }
 
+        if (Standalone)
+        {
+            classes.Add("bit-dtp-sta");
+        }
+
         if (Responsive)
         {
             classes.Add("bit-dtp-res");
         }
 
+        if (Dir is BitDir.Rtl || (Dir is null && _culture.TextInfo.IsRightToLeft))
+        {
+            classes.Add("bit-dtp-rtl");
+        }
+
         return string.Join(' ', classes).Trim();
+    }
+
+    private async Task HandleGoToNow()
+    {
+        if (ReadOnly) return;
+        if (IsEnabled is false) return;
+
+        _hour = DateTime.Now.Hour;
+        _minute = DateTime.Now.Minute;
+
+        await UpdateCurrentValue();
     }
 
 
@@ -1640,6 +1668,7 @@ public partial class BitDatePicker : BitInputBase<DateTimeOffset?>
 
         await base.DisposeAsync(disposing);
 
+        _cancellationTokenSource?.Cancel();
         _cancellationTokenSource?.Dispose();
         OnValueChanged -= HandleOnValueChanged;
 

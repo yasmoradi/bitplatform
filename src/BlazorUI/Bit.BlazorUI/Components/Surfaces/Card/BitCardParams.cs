@@ -33,6 +33,11 @@ public class BitCardParams : BitComponentBaseParams, IBitComponentParams
     public BitColorKind? Border { get; set; }
 
     /// <summary>
+    /// Sets the shadow elevation level of the card (1-24).
+    /// </summary>
+    public int? Elevation { get; set; }
+
+    /// <summary>
     /// Makes the card height 100% of its parent container.
     /// </summary>
     public bool? FullHeight { get; set; }
@@ -48,9 +53,34 @@ public class BitCardParams : BitComponentBaseParams, IBitComponentParams
     public bool? FullWidth { get; set; }
 
     /// <summary>
+    /// Sets the height of the card explicitly.
+    /// </summary>
+    public string? Height { get; set; }
+
+    /// <summary>
+    /// Removes the default padding of the card.
+    /// </summary>
+    public bool? NoPadding { get; set; }
+
+    /// <summary>
     /// Removes the default shadow around the card.
     /// </summary>
     public bool? NoShadow { get; set; }
+
+    /// <summary>
+    /// Renders the card with no shadow and a primary border.
+    /// </summary>
+    public bool? Outlined { get; set; }
+
+    /// <summary>
+    /// Removes the border-radius from the card, rendering it with sharp corners.
+    /// </summary>
+    public bool? Square { get; set; }
+
+    /// <summary>
+    /// Sets the width of the card explicitly.
+    /// </summary>
+    public string? Width { get; set; }
 
 
 
@@ -85,6 +115,13 @@ public class BitCardParams : BitComponentBaseParams, IBitComponentParams
             bitCard.ClassBuilder.Reset();
         }
 
+        if (Elevation.HasValue && bitCard.HasNotBeenSet(nameof(Elevation)))
+        {
+            bitCard.Elevation = Elevation.Value;
+
+            bitCard.ClassBuilder.Reset();
+        }
+
         if (FullHeight.HasValue && bitCard.HasNotBeenSet(nameof(FullHeight)))
         {
             bitCard.FullHeight = FullHeight.Value;
@@ -106,11 +143,46 @@ public class BitCardParams : BitComponentBaseParams, IBitComponentParams
             bitCard.ClassBuilder.Reset();
         }
 
+        if (NoPadding.HasValue && bitCard.HasNotBeenSet(nameof(NoPadding)))
+        {
+            bitCard.NoPadding = NoPadding.Value;
+
+            bitCard.ClassBuilder.Reset();
+        }
+
         if (NoShadow.HasValue && bitCard.HasNotBeenSet(nameof(NoShadow)))
         {
             bitCard.NoShadow = NoShadow.Value;
 
             bitCard.ClassBuilder.Reset();
+        }
+
+        if (Outlined.HasValue && bitCard.HasNotBeenSet(nameof(Outlined)))
+        {
+            bitCard.Outlined = Outlined.Value;
+
+            bitCard.ClassBuilder.Reset();
+        }
+
+        if (Square.HasValue && bitCard.HasNotBeenSet(nameof(Square)))
+        {
+            bitCard.Square = Square.Value;
+
+            bitCard.ClassBuilder.Reset();
+        }
+
+        if (Height is not null && bitCard.HasNotBeenSet(nameof(Height)))
+        {
+            bitCard.Height = Height;
+
+            bitCard.StyleBuilder.Reset();
+        }
+
+        if (Width is not null && bitCard.HasNotBeenSet(nameof(Width)))
+        {
+            bitCard.Width = Width;
+
+            bitCard.StyleBuilder.Reset();
         }
     }
 }
