@@ -48,7 +48,7 @@ namespace BitCodeGeneratorTaskImpl
 
             while (projDir.Parent != null)
             {
-                SolutionPaths = [.. SolutionPaths.Union(Directory.EnumerateFiles(projDir.FullName, "*.sln").Union(Directory.EnumerateFiles(projDir.FullName, "*.slnx")))];
+                SolutionPaths = [.. SolutionPaths.Union(Directory.EnumerateFiles(projDir.FullName, "*.slnx").Union(Directory.EnumerateFiles(projDir.FullName, "*.slnx")))];
 
                 _bitConfigFilePath = Path.Combine(projDir.FullName, BitConfigFileName);
 

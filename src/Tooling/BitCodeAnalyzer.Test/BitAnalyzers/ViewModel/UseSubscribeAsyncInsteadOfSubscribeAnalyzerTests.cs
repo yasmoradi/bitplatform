@@ -32,7 +32,7 @@ namespace Bit.Tooling.CodeAnalyzer.Test.BitAnalyzers.ViewModel
 
         public override async Task<Project> CreateProject(string[] sources, string language = LanguageNames.CSharp)
         {
-            return (await GetWorkspace(basePath, "BitPrismTestsProj.sln")).CurrentSolution.Projects.Single();
+            return (await GetWorkspace(basePath, "BitPrismTestsProj.slnx")).CurrentSolution.Projects.Single();
         }
 
         protected override DiagnosticAnalyzer GetCSharpDiagnosticAnalyzer()

@@ -3,9 +3,9 @@
     <TargetFramework>net10.0</TargetFramework>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Bit.Server.Data.EntityFramework" Version="20.0.0" />
-    <PackageReference Include="Bit.Server.WebApi" Version="20.0.0" />
-    <PackageReference Include="Bit.Tooling.CodeAnalyzer" Version="20.0.0" />
+    <PackageReference Include="Bit.Server.Data.EntityFramework" Version="20.0.1" />
+    <PackageReference Include="Bit.Server.WebApi" Version="20.0.1" />
+    <PackageReference Include="Bit.Tooling.CodeAnalyzer" Version="20.0.1" />
     <PackageReference Include="EntityFramework" Version="6.5.2" />
   </ItemGroup>
   <ItemGroup>

@@ -48,7 +48,7 @@ namespace Bit.Tooling.CodeAnalyzer.Test.BitAnalyzers.Data.EntityFramework
 
         public override async Task<Project> CreateProject(string[] sources, string language = LanguageNames.CSharp)
         {
-            return (await GetWorkspace(basePath, "EntityFrameworkFullAsNoTrackingCallTests.sln")).CurrentSolution.Projects.Single();
+            return (await GetWorkspace(basePath, "EntityFrameworkFullAsNoTrackingCallTests.slnx")).CurrentSolution.Projects.Single();
         }
 
         protected override DiagnosticAnalyzer GetCSharpDiagnosticAnalyzer()

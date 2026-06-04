@@ -1,7 +1,6 @@
 ﻿using AutoMapper;
 using Bit.Model.Contracts;
 using Bit.Model.Implementations;
-using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -50,7 +49,7 @@ namespace Bit.Core.Contracts
                     }
                 }
 
-                MapperConfiguration mapperConfig = new MapperConfiguration(ConfigureMapper, resolver.Resolve<ILoggerFactory>());
+                MapperConfiguration mapperConfig = new MapperConfiguration(ConfigureMapper);
 
                 return mapperConfig;
             }
