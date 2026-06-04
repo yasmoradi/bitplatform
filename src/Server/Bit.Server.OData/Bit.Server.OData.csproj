@@ -1,23 +1,24 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <Import Project="../../Bit.Build.props" />
+    <Import Project="../../Bit.Build.props" />
 
-  <PropertyGroup>
-    <TargetFramework>net9.0</TargetFramework>
-    <PackageTags>$(PackageTags) Web API OData Rest Microsoft AspNet WebApi AspNetWebApi</PackageTags>
-    <RootNamespace>Bit.OData</RootNamespace>
-  </PropertyGroup>
+    <PropertyGroup>
+        <TargetFramework>net10.0</TargetFramework>
+        <PackageTags>$(PackageTags) Web API OData Rest Microsoft AspNet WebApi AspNetWebApi</PackageTags>
+        <RootNamespace>Bit.OData</RootNamespace>
+    </PropertyGroup>
 
-  <ItemGroup>
-    <PackageReference Include="Bit.Swashbuckle.OData" Version="4.0.9" />
-	  <PackageReference Include="Microsoft.AspNet.OData" Version="7.7.8" />
-    <PackageReference Include="LambdaSqlBuilder" Version="0.9.0" />
-    <PackageReference Include="Microsoft.OData.Core" Version="7.22.0" />
-  </ItemGroup>
+    <ItemGroup>
+        <PackageReference Include="Bit.Swashbuckle.OData" Version="4.0.9" />
+        <PackageReference Include="Microsoft.AspNet.OData" Version="7.7.9" />
+        <PackageReference Include="LambdaSqlBuilder" Version="0.9.0" />
+        <PackageReference Include="Microsoft.OData.Core" Version="7.22.0" />
+        <PackageReference Include="System.Security.Cryptography.Xml" Version="10.0.8" />
+    </ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\Bit.Server.Data\Bit.Server.Data.csproj" />
-    <ProjectReference Include="..\Bit.Server.WebApi\Bit.Server.WebApi.csproj" />
-  </ItemGroup>
-	
+    <ItemGroup>
+        <ProjectReference Include="..\Bit.Server.Data\Bit.Server.Data.csproj" />
+        <ProjectReference Include="..\Bit.Server.WebApi\Bit.Server.WebApi.csproj" />
+    </ItemGroup>
+
 </Project>

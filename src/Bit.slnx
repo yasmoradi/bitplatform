@@ -1,0 +1,62 @@
+<Solution>
+  <Configurations>
+    <Platform Name="Any CPU" />
+    <Platform Name="iPhone" />
+    <Platform Name="iPhoneSimulator" />
+    <Platform Name="x64" />
+    <Platform Name="x86" />
+  </Configurations>
+  <Folder Name="/Client/">
+    <Project Path="Client/Bit.Client.Data.EntityFrameworkCore/Bit.Client.Data.EntityFrameworkCore.csproj" />
+  </Folder>
+  <Folder Name="/Client/Web/">
+    <Project Path="Client/Web/Bit.Client.Web.Blazor/Bit.Client.Web.Blazor.csproj" />
+  </Folder>
+  <Folder Name="/Extensions/">
+    <Project Path="Extensions/Bit.Extensions.Caching.EasyCaching/Bit.Extensions.Caching.EasyCaching.csproj" />
+    <Project Path="Extensions/Bit.System.Diagnostics.CodeAnalysis/Bit.System.Diagnostics.CodeAnalysis.csproj" />
+  </Folder>
+  <Folder Name="/Server/">
+    <Project Path="Server/Bit.SampleServer/Bit.SampleServer.csproj" />
+    <Project Path="Server/Bit.Server.Core/Bit.Server.Core.csproj" />
+    <Project Path="Server/Bit.Server.Data.EntityFramework/Bit.Server.Data.EntityFramework.csproj" />
+    <Project Path="Server/Bit.Server.Data.EntityFrameworkCore/Bit.Server.Data.EntityFrameworkCore.csproj" />
+    <Project Path="Server/Bit.Server.Data.NHibernate/Bit.Server.Data.NHibernate.csproj" />
+    <Project Path="Server/Bit.Server.Data/Bit.Server.Data.csproj" />
+    <Project Path="Server/Bit.Server.Hangfire/Bit.Server.Hangfire.csproj" />
+    <Project Path="Server/Bit.Server.IdentityServer/Bit.Server.IdentityServer.csproj" />
+    <Project Path="Server/Bit.Server.OData/Bit.Server.OData.csproj" />
+    <Project Path="Server/Bit.Server.Owin/Bit.Server.Owin.csproj" />
+    <Project Path="Server/Bit.Server.Signalr/Bit.Server.Signalr.csproj" />
+    <Project Path="Server/Bit.Server.Test/Bit.Server.Test.csproj" />
+    <Project Path="Server/Bit.Server.WebApi/Bit.Server.WebApi.csproj" />
+    <Project Path="Server/Bit.Tests/Bit.Tests.csproj" />
+  </Folder>
+  <Folder Name="/Solution Items/">
+    <File Path="Bit.Build.props" />
+    <File Path="BitConfig.json" />
+    <File Path="global.json" />
+  </Folder>
+  <Folder Name="/Tooling/">
+    <Project Path="Tooling/Bit.Tooling.CodeAnalyzer/Bit.Tooling.CodeAnalyzer.csproj" />
+    <Project Path="Tooling/Bit.Tooling.CodeGenerator.Task/Bit.Tooling.CodeGenerator.Task.csproj">
+      <BuildDependency Project="Tooling/Bit.Tooling.CodeGenerator/Bit.Tooling.CodeGenerator.csproj" />
+    </Project>
+    <Project Path="Tooling/Bit.Tooling.CodeGenerator/Bit.Tooling.CodeGenerator.csproj" />
+    <Project Path="Tooling/Bit.Tooling.Core/Bit.Tooling.Core.shproj" />
+    <Project Path="Tooling/BitCodeAnalyzer.Test/BitCodeAnalyzer.Test.csproj" />
+    <Project Path="Tooling/BitCodeGenerator.Test/BitCodeGenerator.Test.csproj" />
+  </Folder>
+  <Folder Name="/Universal/">
+    <Project Path="Universal/Bit.Universal.AutoMapper.Legacy/Bit.Universal.AutoMapper.Legacy.csproj" />
+    <Project Path="Universal/Bit.Universal.AutoMapper/Bit.Universal.AutoMapper.csproj" />
+    <Project Path="Universal/Bit.Universal.Core/Bit.Universal.Core.csproj" />
+    <Project Path="Universal/Bit.Universal.Data.EntityFrameworkCore/Bit.Universal.Data.EntityFrameworkCore.csproj" />
+    <Project Path="Universal/Bit.Universal.Data/Bit.Universal.Data.csproj" />
+    <Project Path="Universal/Bit.Universal.Http/Bit.Universal.Http.csproj" />
+    <Project Path="Universal/Bit.Universal.Model/Bit.Universal.Model.csproj" />
+    <Project Path="Universal/Bit.Universal.OData/Bit.Universal.OData.csproj" />
+    <Project Path="Universal/Bit.Universal.SignalR/Bit.Universal.SignalR.csproj" />
+    <Project Path="Universal/Bit.Universal.Sync.ODataEntityFrameworkCore/Bit.Universal.Sync.ODataEntityFrameworkCore.csproj" />
+  </Folder>
+</Solution>

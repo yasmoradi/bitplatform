@@ -48,7 +48,7 @@ namespace BitCodeGeneratorTaskImpl
 
             while (projDir.Parent != null)
             {
-                SolutionPaths = SolutionPaths.Union(Directory.EnumerateFiles(projDir.FullName, "*.sln")).ToArray();
+                SolutionPaths = [.. SolutionPaths.Union(Directory.EnumerateFiles(projDir.FullName, "*.sln").Union(Directory.EnumerateFiles(projDir.FullName, "*.slnx")))];
 
                 _bitConfigFilePath = Path.Combine(projDir.FullName, BitConfigFileName);
 
@@ -80,7 +80,7 @@ namespace BitCodeGeneratorTaskImpl
         {
             using (MSBuildWorkspace workspace = MSBuildWorkspace.Create(new Dictionary<string, string>
             {
-                { "TargetFramework", bitConfig.TargetFramework ?? "net9.0" }
+                { "TargetFramework", bitConfig.TargetFramework ?? "net10.0" }
             }))
             {
                 workspace.SkipUnrecognizedProjects = workspace.LoadMetadataForReferencedProjects = true;

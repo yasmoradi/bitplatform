@@ -142,7 +142,7 @@ namespace Bit.Test.Implementations
             {
                 foreach (object obj in Objects.Where(obj => Fake.IsFake(obj)))
                 {
-                    Fake.ClearConfiguration(obj);
+                    Fake.Reset(obj);
                     Fake.ClearRecordedCalls(obj);
                 }
 

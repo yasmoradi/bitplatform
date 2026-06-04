@@ -1,6 +1,7 @@
-﻿using System.Collections.Generic;
-using System.IO;
+﻿using System.IO;
 using System.Linq;
+using System.Xml.Linq;
+using System.Collections.Generic;
 using System.Text.RegularExpressions;
 
 namespace Bit.Tooling.CodeGenerator.Implementations
@@ -24,6 +25,19 @@ namespace Bit.Tooling.CodeGenerator.Implementations
         {
             _solutionFileName = solutionFileName;
             _slnLines = new List<object>();
+
+            if (Path.GetExtension(_solutionFileName).Equals(".slnx", System.StringComparison.OrdinalIgnoreCase))
+            {
+                ParseSlnx();
+            }
+            else
+            {
+                ParseSln();
+            }
+        }
+
+        private void ParseSln()
+        {
             string slnTxt = File.ReadAllText(_solutionFileName);
             string[] lines = slnTxt.Split('\n');
             Regex projMatcher = new Regex("Project\\(\"(?<ParentProjectGuid>{[A-F0-9-]+})\"\\) = \"(?<ProjectName>.*?)\", \"(?<RelativePath>.*?)\", \"(?<ProjectGuid>{[A-F0-9-]+})");
@@ -48,6 +62,25 @@ namespace Bit.Tooling.CodeGenerator.Implementations
             },
             RegexOptions.Multiline
             );
+        }
+
+        private void ParseSlnx()
+        {
+            XDocument doc = XDocument.Load(_solutionFileName);
+            XNamespace ns = doc.Root?.Name.Namespace ?? XNamespace.None;
+
+            foreach (XElement projectElement in doc.Descendants(ns + "Project"))
+            {
+                string? relativePath = projectElement.Attribute("Path")?.Value;
+                if (string.IsNullOrEmpty(relativePath))
+                    continue;
+
+                _slnLines.Add(new ProjectInfo
+                {
+                    RelativePath = relativePath,
+                    ProjectName = Path.GetFileNameWithoutExtension(relativePath),
+                });
+            }
         }
 
         public List<ProjectInfo> GetProjects(bool bGetAlsoFolders = false)

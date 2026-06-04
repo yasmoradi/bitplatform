@@ -47,14 +47,14 @@ namespace Bit.Tooling.CodeGenerator.Test.Helpers
 
         public virtual async Task<Workspace> GetWorkspace()
         {
-            string solutionPath = Path.Combine(Environment.CurrentDirectory, @"..\..\..\..\..\Bit.sln");
+            string solutionPath = Path.Combine(Environment.CurrentDirectory, @"..\..\..\..\..\Bit.slnx");
 
             if (!MSBuildLocator.IsRegistered)
                 MSBuildLocator.RegisterDefaults();
 
             MSBuildWorkspace workspace = MSBuildWorkspace.Create(new Dictionary<string, string>()
             {
-                { "TargetFramework", "net9.0" }
+                { "TargetFramework", "net10.0" }
             });
 
             workspace.WorkspaceFailed += Workspace_WorkspaceFailed;
