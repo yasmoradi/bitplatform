@@ -12,8 +12,8 @@ using System.Threading.Tasks;
 namespace Bit.Http.Implementations
 {
     public class BitHttpClientHandler :
-#if Android && !Maui
-        Xamarin.Android.Net.AndroidClientHandler
+#if Android
+        Xamarin.Android.Net.AndroidMessageHandler
 #elif iOS
         NSUrlSessionHandler
 #else
@@ -32,26 +32,6 @@ namespace Bit.Http.Implementations
         private readonly IDateTimeProvider _dateTimeProvider = default!;
 
         private readonly IClientAppProfile _clientAppProfile = default!;
-
-#if Android && !Maui
-        protected override async Task WriteRequestContentToOutput(HttpRequestMessage request, Java.Net.HttpURLConnection httpConnection, CancellationToken cancellationToken)
-        {
-            if (request == null)
-                throw new ArgumentNullException(nameof(request));
-
-            if (httpConnection == null)
-                throw new ArgumentNullException(nameof(httpConnection));
-
-            // https://github.com/xamarin/xamarin-android/issues/4476
-
-            var stream = await request.Content.ReadAsStreamAsync().ConfigureAwait(false);
-
-            await stream.CopyToAsync(httpConnection.OutputStream, 4096, cancellationToken).ConfigureAwait(false);
-
-            if (stream.CanSeek)
-                stream.Seek(0, SeekOrigin.Begin);
-        }
-#endif
 
         protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
@@ -73,10 +53,10 @@ namespace Bit.Http.Implementations
 
             if (!request.Headers.Any(h => h.Key == "Client-Type"))
             {
-#if DotNet
-                request.Headers.Add("Client-Type", System.Runtime.InteropServices.RuntimeInformation.ProcessArchitecture == System.Runtime.InteropServices.Architecture.Wasm ? "Wasm" : "Xamarin");
-#else           
+#if UWP
                 request.Headers.Add("Client-Type", "Xamarin");
+#else           
+                request.Headers.Add("Client-Type", System.Runtime.InteropServices.RuntimeInformation.ProcessArchitecture == System.Runtime.InteropServices.Architecture.Wasm ? "Wasm" : "Maui");
 #endif
                 request.Headers.Add("Client-Date-Time", _dateTimeProvider.GetCurrentUtcDateTime().UtcDateTime.ToString("o", CultureInfo.InvariantCulture));
 
@@ -125,16 +105,6 @@ namespace Bit.Http.Implementations
 
                 return response;
             }
-#if Android && !Maui
-            catch (Java.Lang.Throwable exp) // https://github.com/xamarin/xamarin-android/issues/3216
-            {
-                throw exp switch
-                {
-                    Java.IO.IOException _ => new IOException(exp.Message, exp),
-                    _ => new Exception(exp.Message, exp),
-                };
-            }
-#endif
             catch (HttpRequestException exp)
             {
                 properties.Add("RequestException", exp.ToString());

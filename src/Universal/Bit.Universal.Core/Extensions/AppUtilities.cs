@@ -16,7 +16,7 @@ namespace Bit.Core.Extensions
 
     public static class AppUtilities
     {
-#if Android || iOS || UWP
+#if Android || iOS || UWP || Windows
         public static Workload Workload => Workload.Client;
 #else
         static Workload? _workload;

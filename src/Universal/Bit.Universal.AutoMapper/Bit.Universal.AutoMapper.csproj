@@ -3,13 +3,13 @@
     <Import Project="../../Bit.Build.props" />
 
     <PropertyGroup>
-        <TargetFramework>net10.0</TargetFramework>
+        <TargetFrameworks>net10.0;netstandard2.0;net10.0-windows10.0.19041;net10.0-android;net10.0-ios;net10.0-maccatalyst</TargetFrameworks>
         <PackageTags>$(PackageTags) Model Dto Entity</PackageTags>
         <RootNamespace>Bit.Model</RootNamespace>
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="AutoMapper" Version="14.0.0" />
+        <PackageReference Include="AutoMapper" Version="10.1.1" />
         <ProjectReference Include="..\Bit.Universal.Model\Bit.Universal.Model.csproj" />
     </ItemGroup>
 

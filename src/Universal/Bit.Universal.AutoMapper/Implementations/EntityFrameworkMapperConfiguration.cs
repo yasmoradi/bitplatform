@@ -26,7 +26,7 @@ namespace Bit.Data.EntityFramework.Implementations
 #if DotNetStandard2_0 || UAP10_0_17763
             mapperConfigExpression.ForAllPropertyMaps(
 #else
-            mapperConfigExpression.Internal().ForAllPropertyMaps(
+            mapperConfigExpression.ForAllPropertyMaps(
 #endif
                 MapperPropConfigurationCondition, (p, member) =>
             {

@@ -38,7 +38,7 @@ namespace Bit.Core
 #if !UWP
                 Assembly.GetCallingAssembly()
 #else
-                Assembly.GetEntryAssembly() // UWP .NET Native
+                Assembly.GetEntryAssembly() ?? Assembly.GetCallingAssembly() // UWP .NET Native
 #endif
             };
         }

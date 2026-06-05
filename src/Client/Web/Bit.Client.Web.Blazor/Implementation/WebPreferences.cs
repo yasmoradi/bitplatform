@@ -22,7 +22,7 @@ namespace Bit.Client.Web.Blazor.Implementation
 
         public virtual void Clear(string sharedName)
         {
-#if Android || iOS || UWP
+#if Maui
             Microsoft.Maui.Storage.Preferences.Clear(sharedName);
 #else
             if (_wasm_js_runtime != null)
@@ -81,7 +81,7 @@ namespace Bit.Client.Web.Blazor.Implementation
         {
             string? result = null;
 
-#if Android || iOS || UWP
+#if Maui
             result = Microsoft.Maui.Storage.Preferences.Get(key, defaultValue);
 #else
             if (_wasm_js_runtime != null)
@@ -146,7 +146,7 @@ namespace Bit.Client.Web.Blazor.Implementation
 
         public virtual void Remove(string key, string sharedName)
         {
-#if Android || iOS || UWP
+#if Maui
             Microsoft.Maui.Storage.Preferences.Remove(key, sharedName);
 #else
             if (_wasm_js_runtime != null)
@@ -193,7 +193,7 @@ namespace Bit.Client.Web.Blazor.Implementation
 
         public virtual void Set(string key, string value, string sharedName)
         {
-#if Android || iOS || UWP
+#if Maui
             Microsoft.Maui.Storage.Preferences.Set(key, value, sharedName);
 #else
             if (_wasm_js_runtime != null)

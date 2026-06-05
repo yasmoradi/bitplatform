@@ -3,7 +3,7 @@
     <Import Project="../../Bit.Build.props" />
 
     <PropertyGroup>
-        <TargetFramework>net10.0</TargetFramework>
+        <TargetFrameworks>net10.0;netstandard2.0;net10.0-windows10.0.19041;net10.0-android;net10.0-ios;net10.0-maccatalyst</TargetFrameworks>
         <RootNamespace>Bit.Core</RootNamespace>
     </PropertyGroup>
 
@@ -12,8 +12,13 @@
         <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
         <PackageReference Include="Autofac" Version="8.4.0" />
         <PackageReference Include="Autofac.Extensions.DependencyInjection" Version="10.0.0" />
-        <PackageReference Condition=" '$(TargetFramework)' == 'monoandroid12.0' OR '$(TargetFramework)' == 'Xamarin.iOS10' OR '$(TargetFramework)' == 'uap10.0.17763' " Include="Xamarin.Essentials" Version="1.8.0" />
+        <PackageReference Include="System.ComponentModel.Annotations" Version="5.0.0" />
+        <PackageReference Condition=" '$(TargetFramework)' == 'netstandard2.0' " Include="Xamarin.Essentials" Version="1.8.1" />
         <PackageReference Include="Prism.Core" Version="8.1.97" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Condition=" '$(TargetFramework)' == 'netstandard2.0' " Include="..\..\Extensions\Bit.System.Diagnostics.CodeAnalysis\Bit.System.Diagnostics.CodeAnalysis.csproj" />
     </ItemGroup>
 
 </Project>

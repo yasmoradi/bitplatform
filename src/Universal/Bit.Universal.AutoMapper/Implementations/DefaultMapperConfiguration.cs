@@ -16,7 +16,7 @@ namespace Bit.Model.Implementations
 #if DotNetStandard2_0 || UAP10_0_17763
             mapperConfigExpression.ForAllMaps((typeMap, mapExp) =>
 #else
-            mapperConfigExpression.Internal().ForAllMaps((typeMap, mapExp) =>
+            mapperConfigExpression.ForAllMaps((typeMap, mapExp) =>
 #endif
             {
                 mapExp.PreserveReferences();

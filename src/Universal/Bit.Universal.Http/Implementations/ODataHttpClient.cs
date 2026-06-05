@@ -43,7 +43,7 @@ namespace Bit.Http.Implementations
             using Stream responseStream = await (await HttpClient.SendAsync(request, cancellationToken).ConfigureAwait(false))
                 .EnsureSuccessStatusCode()
                 .Content.
-#if DotNetStandard2_0 || UWP || Android || iOS  || DotNetStandard2_1
+#if DotNetStandard2_0 || UWP
             ReadAsStreamAsync()
 #else
             ReadAsStreamAsync(cancellationToken)
@@ -94,7 +94,7 @@ namespace Bit.Http.Implementations
             using Stream responseStream = await (await HttpClient.GetAsync($"odata/{ODataRoute}/{ControllerName}({string.Join(",", keys)}){qs}", cancellationToken).ConfigureAwait(false))
                 .EnsureSuccessStatusCode()
                 .Content.
-#if DotNetStandard2_0 || UWP || Android || iOS || DotNetStandard2_1
+#if DotNetStandard2_0 || UWP
             ReadAsStreamAsync()
 #else
             ReadAsStreamAsync(cancellationToken)

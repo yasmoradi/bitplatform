@@ -35,7 +35,7 @@ namespace Prism.Events
             if (action == null)
                 throw new ArgumentNullException(nameof(action));
 
-#if !Android && !iOS && !UWP && !Mac
+#if !Maui && !UWP
             if (pubSubEvent.SynchronizationContext == null && threadOption == ThreadOption.UIThread)
                 threadOption = ThreadOption.PublisherThread;
 #endif
@@ -82,7 +82,7 @@ namespace Prism.Events
             if (action == null)
                 throw new ArgumentNullException(nameof(action));
 
-#if !Android && !iOS && !UWP && !Mac
+#if !Maui && !UWP
             if (pubSubEvent.SynchronizationContext == null && threadOption == ThreadOption.UIThread)
                 threadOption = ThreadOption.PublisherThread;
 #endif
@@ -111,7 +111,7 @@ namespace Prism.Events
             if (filter == null)
                 throw new ArgumentNullException(nameof(filter));
 
-#if !Android && !iOS && !UWP && !Mac
+#if !Maui && !UWP
             if (pubSubEvent.SynchronizationContext == null && threadOption == ThreadOption.UIThread)
                 threadOption = ThreadOption.PublisherThread;
 #endif

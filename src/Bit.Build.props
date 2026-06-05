@@ -1,32 +1,32 @@
 <Project>
 
-	<PropertyGroup>
+    <PropertyGroup>
 
-		<!-- Info -->
-		<Authors>Bit Platform</Authors>
-		<Company>Bit Platform</Company>
-		<Product>Bit Platform</Product>
-		<Title>$(MSBuildProjectName)</Title>
-		<Description>$(MSBuildProjectName)</Description>
-		<Copyright>Copyright Â© Bit Platform 2023</Copyright>
+        <!-- Info -->
+        <Authors>Bit Platform</Authors>
+        <Company>Bit Platform</Company>
+        <Product>Bit Platform</Product>
+        <Title>$(MSBuildProjectName)</Title>
+        <Description>$(MSBuildProjectName)</Description>
+        <Copyright>Copyright Â© Bit Platform 2023</Copyright>
 
-		<!-- Repo -->
-		<RepositoryUrl>https://github.com/bitfoundation/bitplatform</RepositoryUrl>
-		<RepositoryType>git</RepositoryType>
+        <!-- Repo -->
+        <RepositoryUrl>https://github.com/bitfoundation/bitplatform</RepositoryUrl>
+        <RepositoryType>git</RepositoryType>
 
-		<!-- nupkg -->
-		<PackageId>$(MSBuildProjectName)</PackageId>
-		<PackageTags>Bit</PackageTags>
-		<PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
-		<GeneratePackageOnBuild Condition=" '$(Configuration)' == 'Release' ">true</GeneratePackageOnBuild>
-		<AllowedOutputExtensionsInPackageBuildOutputFolder Condition=" '$(Configuration)' == 'Release' ">$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
-		<PackageDescription>$(MSBuildProjectName)</PackageDescription>
-		<PackageLicenseExpression>MIT</PackageLicenseExpression>
-		<PackageProjectUrl>https://github.com/bitfoundation/bitplatform</PackageProjectUrl>
-		<PackageIconUrl>https://avatars.githubusercontent.com/u/22663390</PackageIconUrl>
+        <!-- nupkg -->
+        <PackageId>$(MSBuildProjectName)</PackageId>
+        <PackageTags>Bit</PackageTags>
+        <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+        <GeneratePackageOnBuild Condition=" '$(Configuration)' == 'Release' ">true</GeneratePackageOnBuild>
+        <AllowedOutputExtensionsInPackageBuildOutputFolder Condition=" '$(Configuration)' == 'Release' ">$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
+        <PackageDescription>$(MSBuildProjectName)</PackageDescription>
+        <PackageLicenseExpression>MIT</PackageLicenseExpression>
+        <PackageProjectUrl>https://github.com/bitfoundation/bitplatform</PackageProjectUrl>
+        <PackageIconUrl>https://avatars.githubusercontent.com/u/22663390</PackageIconUrl>
 
 
-        <ReleaseVersion>20.0.1</ReleaseVersion>
+        <ReleaseVersion>20.0.4</ReleaseVersion>
 
         <PackageReleaseNotes>https://github.com/bitfoundation/bitplatform/releases/tag/v-$(ReleaseVersion)</PackageReleaseNotes>
         <PackageVersion>$(ReleaseVersion)</PackageVersion>
@@ -34,30 +34,48 @@
         <!-- Version -->
         <Version>$(ReleaseVersion).$([System.DateTime]::Now.ToString(HHmm))</Version>
 
-		<!-- Compile -->
-		<NeutralLanguage>en</NeutralLanguage>
-		<LangVersion>preview</LangVersion>
-		<Nullable>enable</Nullable>
-		<NoWarn>$(NoWarn);NU1605;CS1591;NU1701;NU1605;CA1303</NoWarn>
-		<!-- https://stackoverflow.com/a/46815541/2720104 -->
-		<DocumentationFile>bin\$(Configuration)\$(TargetFramework)\$(AssemblyName).xml</DocumentationFile>
-		<EmbedAllSources>True</EmbedAllSources>
-		<DebugType>portable</DebugType>
-		<DefineConstants Condition=" '$(TargetFramework)' == 'net10.0' ">$(DefineConstants);DotNet</DefineConstants>
-		<ProduceReferenceAssembly>True</ProduceReferenceAssembly>
+        <!-- Compile -->
+        <NeutralLanguage>en</NeutralLanguage>
+        <LangVersion>preview</LangVersion>
+        <Nullable>enable</Nullable>
+        <NoWarn>$(NoWarn);NU1605;CS1591;NU1701;NU1605;CA1303</NoWarn>
+        <!-- https://stackoverflow.com/a/46815541/2720104 -->
+        <DocumentationFile>bin\$(Configuration)\$(TargetFramework)\$(AssemblyName).xml</DocumentationFile>
+        <EmbedAllSources>True</EmbedAllSources>
+        <DebugType>portable</DebugType>
+        <DefineConstants Condition=" '$(TargetFramework)' == 'net10.0' ">$(DefineConstants);DotNet</DefineConstants>
+        <ProduceReferenceAssembly>True</ProduceReferenceAssembly>
 
-		<AnalysisLevel>latest</AnalysisLevel>
-		<AnalysisMode>AllEnabledByDefault</AnalysisMode>
-		<EnableNETAnalyzers>true</EnableNETAnalyzers>
-		<EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+        <AnalysisLevel>latest</AnalysisLevel>
+        <AnalysisMode>AllEnabledByDefault</AnalysisMode>
+        <EnableNETAnalyzers>true</EnableNETAnalyzers>
+        <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
         <UseRidGraph>true</UseRidGraph>
-	</PropertyGroup>
+    </PropertyGroup>
 
-	<PropertyGroup Condition="'$(Configuration)'=='Debug'">
-		<DebugSymbols>true</DebugSymbols>
-	</PropertyGroup>
+    <PropertyGroup>
+        <!-- UWP .NET Native is the only supported runtime that would pick .NET Standard 2.0 target -->
+        <!-- So, we can assume netstandard2.0 is Xamarin / UWP / Windows -->
+        <DefineConstants Condition=" '$(TargetFramework)' == 'netstandard2.0' ">$(DefineConstants);UWP;Xamarin</DefineConstants>
 
-	<ItemGroup>
+        <DefineConstants Condition=" '$(TargetFramework)' == 'net10.0-android' ">$(DefineConstants);Android</DefineConstants>
+        <DefineConstants Condition=" '$(TargetFramework)' == 'net10.0-ios' ">$(DefineConstants);iOS</DefineConstants>
+        <DefineConstants Condition=" '$(TargetFramework)' == 'net10.0-maccatalyst' ">$(DefineConstants);Mac</DefineConstants>
+        <DefineConstants Condition=" '$(TargetFramework)' == 'net10.0-windows10.0.19041' ">$(DefineConstants);Windows</DefineConstants>
+        
+        <DefineConstants Condition=" '$(TargetFramework)' == 'net10.0' ">$(DefineConstants);DotNet</DefineConstants>
+        <DefineConstants Condition=" '$(TargetFramework)' == 'netstandard2.0' ">$(DefineConstants);DotNetStandard;DotNetStandard2_0</DefineConstants>
+        <DefineConstants Condition=" '$(TargetFramework)' == 'netstandard2.1' ">$(DefineConstants);DotNetStandard;DotNetStandard2_1</DefineConstants>
+        
+        <DefineConstants Condition=" '$(TargetFramework)' == 'net10.0-android' OR '$(TargetFramework)' == 'net10.0-ios' OR '$(TargetFramework)' == 'net10.0-windows10.0.19041' OR '$(TargetFramework)' == 'net10.0-maccatalyst' ">$(DefineConstants);Maui</DefineConstants>
+        <UseMauiEssentials Condition=" '$(TargetFramework)' == 'net10.0-android' OR '$(TargetFramework)' == 'net10.0-ios' OR '$(TargetFramework)' == 'net10.0-windows10.0.19041' OR '$(TargetFramework)' == 'net10.0-maccatalyst' ">true</UseMauiEssentials>
+    </PropertyGroup>
+
+    <PropertyGroup Condition="'$(Configuration)'=='Debug'">
+        <DebugSymbols>true</DebugSymbols>
+    </PropertyGroup>
+
+    <ItemGroup>
         <PackageReference Include="SourceLink.Copy.PdbFiles" Version="2.8.3">
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -66,6 +84,6 @@
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
-	</ItemGroup>
+    </ItemGroup>
 
 </Project>

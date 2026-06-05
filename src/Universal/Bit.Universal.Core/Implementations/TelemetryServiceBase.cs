@@ -67,11 +67,6 @@ namespace Bit.Core.Implementations
             if (!initialProps.ContainsKey("BitVersion"))
                 initialProps.Add("BitVersion", typeof(TelemetryServiceBase).Assembly.GetName().Version!.ToString());
 
-#if (Android || iOS) && !Maui
-            if (!initialProps.ContainsKey("Mono"))
-                initialProps.Add("Mono", Mono.Runtime.GetDisplayName());
-#endif
-
             return initialProps;
         }
 
