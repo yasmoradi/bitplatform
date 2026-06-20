@@ -8,14 +8,14 @@ namespace Bit.BlazorUI;
 /// </summary>
 public partial class BitPhoneInput : BitInputBase<string?>
 {
+    private readonly BitInputRateLimiter<ChangeEventArgs> _rateLimiter = new();
+
     private bool _isOpen;
     private bool _hasFocus;
+    private string? _searchText;
     private int _activeIndex = -1;
     private int _lastScrolledIndex = -1;
-    private string? _searchText;
-    private List<BitCountry> _viewItems = [];
-    private List<BitCountry> _allItems = [];
-    private ICollection<BitCountry>? _lastCountries;
+
     private string _labelId = string.Empty;
     private string _inputId = string.Empty;
     private string _searchId = string.Empty;
@@ -24,9 +24,13 @@ public partial class BitPhoneInput : BitInputBase<string?>
     private string _dropdownId = string.Empty;
     private string _fieldGroupId = string.Empty;
     private string _scrollContainerId = string.Empty;
-    private DotNetObjectReference<BitPhoneInput>? _dotnetObj;
+    
+    private List<BitCountry> _allItems = [];
+    private List<BitCountry> _viewItems = [];
     private ElementReference _searchInputRef;
     private ElementReference _dropdownButtonRef;
+    private ICollection<BitCountry>? _lastCountries;
+    private DotNetObjectReference<BitPhoneInput>? _dotnetObj;
 
     // Keys whose default browser behavior must be suppressed. These are applied through a
     // deterministic JS keydown listener (see BitExtrasSetPreventKeys) so the suppression
@@ -63,6 +67,12 @@ public partial class BitPhoneInput : BitInputBase<string?>
     /// </summary>
     [Parameter, TwoWayBound]
     public BitCountry? Country { get; set; }
+
+    /// <summary>
+    /// The debounce time in milliseconds for the number input (applied when Immediate is enabled).
+    /// When both DebounceTime and ThrottleTime are greater than zero, debounce takes precedence and throttle is ignored.
+    /// </summary>
+    [Parameter] public int DebounceTime { get; set; }
 
     /// <summary>
     /// The default selected country to be initially used when the Country parameter is not set.
@@ -140,6 +150,12 @@ public partial class BitPhoneInput : BitInputBase<string?>
     /// Custom CSS styles for different parts of the BitPhoneInput.
     /// </summary>
     [Parameter] public BitPhoneInputClassStyles? Styles { get; set; }
+
+    /// <summary>
+    /// The throttle time in milliseconds for the number input (applied when Immediate is enabled).
+    /// Throttle is ignored when both DebounceTime and ThrottleTime are set, as debounce takes precedence.
+    /// </summary>
+    [Parameter] public int ThrottleTime { get; set; }
 
 
 
@@ -478,7 +494,8 @@ public partial class BitPhoneInput : BitInputBase<string?>
 
         if (Immediate is false) return;
 
-        await SetCurrentValueAsStringAsync(e.Value?.ToString());
+        await _rateLimiter.Run(e, DebounceTime, ThrottleTime, async args =>
+            await InvokeAsync(async () => await HandleOnNumberChange(args)));
     }
 
     private void HandleOnInputFocusIn()
@@ -506,6 +523,8 @@ public partial class BitPhoneInput : BitInputBase<string?>
         await base.DisposeAsync(disposing);
 
         _dotnetObj?.Dispose();
+
+        _rateLimiter.Reset();
 
         try
         {
