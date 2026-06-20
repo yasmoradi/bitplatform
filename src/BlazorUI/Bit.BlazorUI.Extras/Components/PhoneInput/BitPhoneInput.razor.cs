@@ -61,6 +61,11 @@ public partial class BitPhoneInput : BitInputBase<string?>
 
 
     /// <summary>
+    /// Determines if the number input is auto focused on first render.
+    /// </summary>
+    [Parameter] public bool AutoFocus { get; set; }
+
+    /// <summary>
     /// Custom CSS classes for different parts of the BitPhoneInput.
     /// </summary>
     [Parameter] public BitPhoneInputClassStyles? Classes { get; set; }
@@ -378,6 +383,13 @@ public partial class BitPhoneInput : BitInputBase<string?>
             if (NoSearchBox is false)
             {
                 await _js.BitExtrasSetPreventKeys(_searchInputRef, _searchBoxKeys);
+            }
+
+            // Apply AutoFocus after the first render completes so focus lands on the number
+            // input once its element exists, following the BitTextInputBase pattern.
+            if (AutoFocus && IsEnabled)
+            {
+                await InputElement.FocusAsync();
             }
         }
 
