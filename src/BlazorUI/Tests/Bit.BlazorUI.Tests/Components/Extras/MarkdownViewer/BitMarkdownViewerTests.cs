@@ -1,6 +1,7 @@
 ﻿using Bunit;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
+using System.Linq;
 
 namespace Bit.BlazorUI.Tests.Components.Extras.MarkdownViewer;
 
@@ -76,6 +77,30 @@ public class BitMarkdownViewerTests : BunitTestContext
             Assert.IsTrue(
                 href.Length == 0 || !href.Contains("javascript:", StringComparison.OrdinalIgnoreCase),
                 $"Unsafe link href was not sanitized: '{href}'.");
+        }
+    }
+
+    [TestMethod,
+        DataRow(@"\\evil.com"),
+        DataRow(@"/\evil.com"),
+        DataRow(@"\/evil.com")]
+    public void BitMarkdownViewerShouldSanitizeBackslashLinks(string url)
+    {
+        var component = RenderComponent<BitMarkdownViewer>(parameters =>
+        {
+            // Browsers treat leading backslashes like slashes (protocol-relative),
+            // including mixed separator runs (BitMarkdownUrlSanitizer).
+            parameters.Add(p => p.Markdown, $"[click]({url})");
+        });
+
+        var links = component.FindAll(".bit-mdv a");
+        if (links.Count > 0)
+        {
+            var href = links[0].GetAttribute("href") ?? string.Empty;
+            var leadingSeparators = href.TakeWhile(c => c is '/' or '\\');
+            Assert.IsTrue(
+                href.Length == 0 || !leadingSeparators.Contains('\\'),
+                $"Backslash link href was not sanitized: '{href}'.");
         }
     }
 
@@ -162,7 +187,7 @@ public class BitMarkdownViewerTests : BunitTestContext
         var component = RenderComponent<BitMarkdownViewer>(parameters =>
         {
             parameters.Add(p => p.Markdown, markdown);
-            parameters.Add(p => p.Pipeline, BitMarkdownViewerPipelines.GitHub);
+            parameters.Add(p => p.Pipeline, BitMarkdownPipelines.GitHub);
         });
 
         var markup = component.Markup;
@@ -178,7 +203,7 @@ public class BitMarkdownViewerTests : BunitTestContext
         var component = RenderComponent<BitMarkdownViewer>(parameters =>
         {
             parameters.Add(p => p.Markdown, "# Hello World :rocket:");
-            parameters.Add(p => p.Pipeline, BitMarkdownViewerPipelines.Advanced);
+            parameters.Add(p => p.Pipeline, BitMarkdownPipelines.Advanced);
         });
 
         var markup = component.Markup;
@@ -201,7 +226,7 @@ public class BitMarkdownViewerTests : BunitTestContext
 
         component.SetParametersAndRender(parameters =>
         {
-            parameters.Add(p => p.Pipeline, BitMarkdownViewerPipelines.GitHub);
+            parameters.Add(p => p.Pipeline, BitMarkdownPipelines.GitHub);
         });
 
         Assert.Contains("<del>gone</del>", component.Markup);
