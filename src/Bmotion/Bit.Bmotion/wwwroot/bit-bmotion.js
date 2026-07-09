@@ -15,9 +15,92 @@
  *    Web Animations API      FLIP playback
  */
 
-// 
+//
+// Pure drag / scroll math - no DOM access, so it is unit-tested directly (Tests/bit-bmotion-js).
+// The exports are an internal testing surface; the C# interop only calls the named bridge functions.
+//
+
+/** Elastic give past a constraint edge: 0 = rigid, 1 = fully elastic. */
+export function applyElastic(overflow, edge) {
+    return edge > 0 ? overflow * edge : 0;
+}
+
+/**
+ * Turns a container rect + element rect (and the element's current transform x/y) into the allowed
+ * transform bounds. An element larger than its container collapses to the centered offset so the
+ * drag pins in place instead of oscillating between contradictory bounds.
+ */
+export function resolveConstraintBounds(cRect, eRect, curX, curY) {
+    const baseLeft = eRect.left - curX;
+    const baseTop  = eRect.top  - curY;
+    let left   = cRect.left   - baseLeft;
+    let right  = cRect.right  - (baseLeft + eRect.width);
+    let top    = cRect.top    - baseTop;
+    let bottom = cRect.bottom - (baseTop + eRect.height);
+    if (right < left) { const mid = (left + right) / 2; left = right = mid; }
+    if (bottom < top) { const mid = (top + bottom) / 2; top = bottom = mid; }
+    return { left, right, top, bottom };
+}
+
+/** Clamps a drag position to its constraints, applying per-edge elastic overflow. */
+export function clampToConstraints(x, y, c, elastic) {
+    if (!c) return { x, y };
+    if (c.left   != null && x < c.left)   x = c.left   - applyElastic(c.left   - x, elastic.left);
+    if (c.right  != null && x > c.right)  x = c.right  + applyElastic(x - c.right,  elastic.right);
+    if (c.top    != null && y < c.top)    y = c.top    - applyElastic(c.top    - y, elastic.top);
+    if (c.bottom != null && y > c.bottom) y = c.bottom + applyElastic(y - c.bottom, elastic.bottom);
+    return { x, y };
+}
+
+/** Normalised 0→1 scroll progress along one axis (0 when the content doesn't overflow). */
+export function scrollFraction(scroll, size, client) {
+    return size > client ? scroll / (size - client) : 0;
+}
+
+/**
+ * Layout FLIP child counter-transform (plan item 1.2). The parent element FLIPs with the transform
+ * `translate(dx,dy) scale(sx,sy)` about its top-left (origin O). A direct child would ride along -
+ * stretched by the scale AND shifted by the translate. To keep the child crisp and in place, apply
+ * the exact inverse of the parent transform about the SAME physical point (the parent's top-left);
+ * in the child's own box coordinates that point is (-offsetX, -offsetY).
+ *
+ * Deriving the inverse: the parent maps x → sx·x + (dx + O(1-sx)). Its inverse, written as a CSS
+ * `translate(t) scale(k)` about O, is k = 1/sx and t = -dx/sx. Counter-scaling alone (t = 0) - the
+ * previous behaviour - left a residual translation of exactly (dx,dy) on the child, so it visibly
+ * jumped toward the FLIP corner at the start and slid back to centre. Including the -d/s translate
+ * cancels that: net is identity at both endpoints, so children stay put and undistorted.
+ */
+// FLIP scale factors come from width/height ratios, so they are non-negative; clamp them away
+// from zero so a collapsed (0-sized) start rect can't turn the inverse math into Infinity/NaN.
+const MIN_FLIP_SCALE = 1e-4;
+
+export function flipChildCorrection(parentRect, childRect, sx, sy, dx = 0, dy = 0) {
+    sx = Math.max(sx, MIN_FLIP_SCALE);
+    sy = Math.max(sy, MIN_FLIP_SCALE);
+    const offsetX = childRect.left - parentRect.left;
+    const offsetY = childRect.top - parentRect.top;
+    return {
+        originX: -offsetX, originY: -offsetY,
+        fromScaleX: 1 / sx, fromScaleY: 1 / sy,
+        fromTranslateX: -dx / sx, fromTranslateY: -dy / sy,
+    };
+}
+
+/**
+ * Border-radius that, once scaled by (sx,sy), renders as the target radius - so corners stay a
+ * constant visual size while the box scales (Motion's border-radius correction). Uses the CSS
+ * elliptical `h / v` form so non-uniform scale still yields round corners.
+ */
+export function correctedRadius(radius, sx, sy) {
+    return {
+        fromX: radius / Math.max(sx, MIN_FLIP_SCALE),
+        fromY: radius / Math.max(sy, MIN_FLIP_SCALE),
+    };
+}
+
+//
 // rAF loop  C# ComputeFrame is called synchronously each tick (Blazor WASM)
-// 
+//
 
 let _rafId = null;
 // Set of engine DotNetObjectReferences. Using a set (rather than a single global) means
@@ -65,9 +148,15 @@ function _tick(timestamp) {
 // Style helpers
 // 
 
+// SVG geometry presentation attributes are set on the element, not via inline style: the CSS `d`
+// property needs a path() wrapper and isn't universally supported, so setAttribute is the reliable
+// path for shape morphing (`d`) and polygon/polyline morphing (`points`).
+const _svgGeomAttrs = new Set(['d', 'points']);
+
 function _applyStyles(el, styles) {
     for (const prop in styles) {
         if (prop.startsWith('--')) el.style.setProperty(prop, styles[prop]);
+        else if (_svgGeomAttrs.has(prop)) el.setAttribute(prop, styles[prop]);
         else el.style[prop] = styles[prop];
     }
 }
@@ -359,6 +448,9 @@ function _attachDrag(elementId, el, opts, dotnetRef, cleanups) {
     const constraintsCfg = opts.dragConstraints ?? null;
     const dirLock        = !!opts.dragDirectionLock;
     const handleSel      = opts.dragHandle ?? null;
+    // Default false (motion.dev semantics): a nested drag stops propagation so it doesn't also
+    // start a draggable ancestor. Set dragPropagation to let both move together.
+    const propagate      = !!opts.dragPropagation;
 
     // Elasticity is per-edge ({ left, right, top, bottom }); a plain number still means uniform.
     const elasticCfg = opts.dragElastic;
@@ -374,10 +466,6 @@ function _attachDrag(elementId, el, opts, dotnetRef, cleanups) {
     let lockedAxis = null; // null = not yet locked, 'x' or 'y' once detected
     let startPX, startPY, startElX, startElY;
     let lastPX, lastPY, lastT, velX = 0, velY = 0;
-
-    function applyElastic(overflow, edge) {
-        return edge > 0 ? overflow * edge : 0;
-    }
 
     // Shared drag-start body: called by the element's own pointerdown listener and by the
     // external startDrag entry point (BmDragControls).
@@ -396,16 +484,50 @@ function _attachDrag(elementId, el, opts, dotnetRef, cleanups) {
         dragging = true;
         lockedAxis = null;
         constraints = _resolveDragConstraints(constraintsCfg, el, startElX, startElY);
+        // Re-measure element-bounds constraints if the layout changes mid-drag (container resize
+        // or scroll). Static pixel bounds have nothing to re-measure, so skip the observers.
+        _observeConstraintChanges();
         // Capture on the target element so move/up events route here even when the drag was
         // started from another element. May throw for an already-released pointer.
         try { el.setPointerCapture(pointerId); } catch { /* stale pointer - drag still tracks moves */ }
         dotnetRef.invokeMethodAsync('OnPointerDown_Drag');
     };
 
+    // Live constraint re-measurement (element-bounds only), active only while dragging.
+    let _resizeObserver = null;
+    const _remeasure = () => {
+        if (dragging) constraints = _resolveDragConstraints(constraintsCfg, el, startElX, startElY);
+    };
+    const _needsRemeasure = () =>
+        !!constraintsCfg && (!!constraintsCfg.parent || typeof constraintsCfg.selector === 'string');
+    function _observeConstraintChanges() {
+        if (!_needsRemeasure() || typeof ResizeObserver !== 'function') return;
+        // A programmatic begin() can re-arm the observers mid-drag (no intervening onUp); tear the
+        // previous ones down first so repeated begins don't leak observers or duplicate listeners.
+        _stopObservingConstraintChanges();
+        _resizeObserver = new ResizeObserver(_remeasure);
+        _resizeObserver.observe(el);
+        // Observe the SAME container _resolveDragConstraints measures against - the parent element
+        // for { parent: true }, or the selector target (which may be a distant ancestor, not
+        // el.parentElement) for { selector }. Otherwise a mid-drag resize of a selector container
+        // wouldn't re-measure the bounds.
+        const container = constraintsCfg.parent ? el.parentElement : document.querySelector(constraintsCfg.selector);
+        if (container) _resizeObserver.observe(container);
+        window.addEventListener('scroll', _remeasure, true);
+        window.addEventListener('resize', _remeasure);
+    }
+    function _stopObservingConstraintChanges() {
+        if (_resizeObserver) { _resizeObserver.disconnect(); _resizeObserver = null; }
+        window.removeEventListener('scroll', _remeasure, true);
+        window.removeEventListener('resize', _remeasure);
+    }
+
     const onDown = (e) => {
         if (e.button !== 0 && e.pointerType !== 'touch') return;
         // Handle mode: only start when the press lands on (or inside) a matching descendant.
         if (handleSel && !(e.target instanceof Element && e.target.closest(handleSel))) return;
+        // Isolate nested draggables unless propagation is opted in (motion.dev's dragPropagation).
+        if (!propagate) e.stopPropagation();
         begin(e.pointerId, e.clientX, e.clientY);
     };
 
@@ -427,10 +549,8 @@ function _attachDrag(elementId, el, opts, dotnetRef, cleanups) {
         let y = startElY + (effectiveAxis === 'x' ? 0 : e.clientY - startPY);
 
         if (constraints) {
-            if (constraints.left   != null && x < constraints.left)   x = constraints.left   - applyElastic(constraints.left   - x, elastic.left);
-            if (constraints.right  != null && x > constraints.right)  x = constraints.right  + applyElastic(x - constraints.right,  elastic.right);
-            if (constraints.top    != null && y < constraints.top)    y = constraints.top    - applyElastic(constraints.top    - y, elastic.top);
-            if (constraints.bottom != null && y > constraints.bottom) y = constraints.bottom + applyElastic(y - constraints.bottom, elastic.bottom);
+            const clamped = clampToConstraints(x, y, constraints, elastic);
+            x = clamped.x; y = clamped.y;
         }
 
         // Sync drag position into C# state synchronously so ComputeFrame picks it up
@@ -441,6 +561,7 @@ function _attachDrag(elementId, el, opts, dotnetRef, cleanups) {
     const onUp = (e) => {
         if (!dragging) return;
         dragging = false;
+        _stopObservingConstraintChanges();
         // Report the constraints actually used for this drag so C#'s release logic (momentum
         // clamping / snap-back) uses the same bounds - essential for element-bounds constraints,
         // which only exist in resolved form here.
@@ -465,6 +586,7 @@ function _attachDrag(elementId, el, opts, dotnetRef, cleanups) {
         el.removeEventListener('pointermove',   onMove);
         el.removeEventListener('pointerup',     onUp);
         el.removeEventListener('pointercancel', onUp);
+        _stopObservingConstraintChanges();
         _dragStarters.delete(elementId);
         el.style.cursor = el.style.userSelect = el.style.touchAction = '';
     });
@@ -536,21 +658,7 @@ function _resolveDragConstraints(cfg, el, curX, curY) {
 
     const cRect = container.getBoundingClientRect();
     const eRect = el.getBoundingClientRect();
-    // The element's layout position with zero transform applied.
-    const baseLeft = eRect.left - curX;
-    const baseTop  = eRect.top  - curY;
-
-    let left   = cRect.left   - baseLeft;
-    let right  = cRect.right  - (baseLeft + eRect.width);
-    let top    = cRect.top    - baseTop;
-    let bottom = cRect.bottom - (baseTop + eRect.height);
-
-    // An element larger than its container inverts the range; collapse to the centered offset
-    // so the drag pins in place instead of oscillating between contradictory bounds.
-    if (right < left) { const mid = (left + right) / 2; left = right = mid; }
-    if (bottom < top) { const mid = (top + bottom) / 2; top = bottom = mid; }
-
-    return { left, right, top, bottom };
+    return resolveConstraintBounds(cRect, eRect, curX, curY);
 }
 
 //
@@ -707,12 +815,26 @@ export function unobserveViewport(elementId) {
 // FLIP layout animation support
 // 
 
-/** Returns the element's DOMRect as a plain object for C# to snapshot. */
+/**
+ * Returns the element's rect in DOCUMENT-relative coordinates (viewport rect + page scroll)
+ * for C# to snapshot.
+ *
+ * FLIP deltas (snap - cur) and the shared-element (LayoutId) registry may capture a rect at
+ * one scroll position and consume it at another - e.g. the user scrolls the page before
+ * clicking a new tab. Raw getBoundingClientRect values are viewport-relative, so the recorded
+ * position goes stale by exactly the scroll amount and the animation starts from the wrong
+ * place. Document coordinates are scroll-invariant, which keeps the FLIP start position correct
+ * across an intervening page scroll. (Widths/heights are unaffected by scrolling.)
+ */
 export function getBoundingRect(elementId) {
     const el = document.getElementById(elementId);
     if (!el) return null;
     const r = el.getBoundingClientRect();
-    return { x: r.x, y: r.y, width: r.width, height: r.height, top: r.top, left: r.left };
+    const sx = window.scrollX, sy = window.scrollY;
+    return {
+        x: r.x + sx, y: r.y + sy, width: r.width, height: r.height,
+        top: r.top + sy, left: r.left + sx,
+    };
 }
 
 /**
@@ -724,17 +846,64 @@ export function playWaapiFlip(elementId, dx, dy, sx, sy, durationMs, easingStr, 
     const el = document.getElementById(elementId);
     if (!el) return;
     el.style.transformOrigin = '0 0';
+    const timing = { duration: durationMs, easing: easingStr || 'ease', fill: 'forwards' };
     const anim = el.animate(
         [
             { transform: `translate(${dx}px,${dy}px) scaleX(${sx}) scaleY(${sy})` },
             { transform: 'translate(0px,0px) scaleX(1) scaleY(1)' },
         ],
-        { duration: durationMs, easing: easingStr || 'ease', fill: 'forwards' }
+        timing
     );
-    anim.onfinish = () => {
+
+    // Size-mode correction (plan item 1.2): while the box scales, counter-scale direct children and
+    // correct the border-radius so text/children don't stretch and corners stay round. Position-mode
+    // FLIP passes sx=sy=1, so this whole block is skipped and behaviour is unchanged there.
+    // These end at their natural values, so they use fill:'none' and leave no persistent override.
+    const cleanups = [];
+    if (Math.abs(sx - 1) > 1e-4 || Math.abs(sy - 1) > 1e-4) {
+        const correctTiming = { duration: durationMs, easing: easingStr || 'ease', fill: 'none' };
+
+        const radius = parseFloat(getComputedStyle(el).borderTopLeftRadius) || 0;
+        if (radius > 0) {
+            const r = correctedRadius(radius, sx, sy);
+            el.animate(
+                [
+                    { borderRadius: `${r.fromX}px / ${r.fromY}px` },
+                    { borderRadius: `${radius}px / ${radius}px` },
+                ],
+                correctTiming
+            );
+        }
+
+        // Measure children relative to the (untransformed) parent before the transform takes hold.
+        const pRect = el.getBoundingClientRect();
+        for (const child of el.children) {
+            if (!(child instanceof HTMLElement)) continue;
+            const c = flipChildCorrection(pRect, child.getBoundingClientRect(), sx, sy, dx, dy);
+            const prevOrigin = child.style.transformOrigin;
+            child.style.transformOrigin = `${c.originX}px ${c.originY}px`;
+            // translate first (outermost), then the inverse scale - the exact inverse of the
+            // parent's `translate(dx,dy) scale(sx,sy)`, so the child neither stretches nor jumps.
+            child.animate(
+                [
+                    { transform: `translate(${c.fromTranslateX}px,${c.fromTranslateY}px) scaleX(${c.fromScaleX}) scaleY(${c.fromScaleY})` },
+                    { transform: 'translate(0px,0px) scaleX(1) scaleY(1)' },
+                ],
+                correctTiming
+            );
+            cleanups.push(() => { child.style.transformOrigin = prevOrigin; });
+        }
+    }
+
+    // Run on finish AND cancel: a cancelled flip must not leave the '0 0' transform-origin (or
+    // the children's counter-transform origins) stuck on the elements.
+    const settle = () => {
         el.style.transform = finalTransform || '';
         el.style.transformOrigin = '';
+        for (const done of cleanups) done();
     };
+    anim.onfinish = settle;
+    anim.oncancel = settle;
 }
 
 // 
@@ -763,8 +932,8 @@ export function observeScroll(containerId, dotnetRef, options) {
             sW = el.scrollWidth; sH = el.scrollHeight;
             cW = el.clientWidth; cH = el.clientHeight;
         }
-        const pX = sW > cW ? sX / (sW - cW) : 0;
-        const pY = sH > cH ? sY / (sH - cH) : 0;
+        const pX = scrollFraction(sX, sW, cW);
+        const pY = scrollFraction(sY, sH, cH);
 
         // Target progress: 0 when the target sits at the first configured alignment, 1 at the
         // second. Both alignment "distances" shift equally per scrolled pixel, so the current
@@ -807,4 +976,26 @@ export function observeScroll(containerId, dotnetRef, options) {
 export function unobserveScroll(key) {
     _scrollSubs.get(key)?.();
     _scrollSubs.delete(key);
+}
+
+// ── View Transitions API ────────────────────────────────────────────────────
+
+// Wrap document.startViewTransition around a C# DOM-update callback. The callback (invoked by
+// name on the dotnet ref) performs the Blazor state change; the browser snapshots before/after and
+// cross-fades. Falls back to running the callback directly when the API is unsupported.
+export async function startViewTransition(dotnetRef, callbackName) {
+    const runUpdate = () => dotnetRef.invokeMethodAsync(callbackName);
+    if (typeof document.startViewTransition !== 'function') {
+        await runUpdate();
+        return false;
+    }
+    const transition = document.startViewTransition(() => runUpdate());
+    try { await transition.finished; }
+    catch {
+        // `finished` also rejects when the C# update callback threw - that IS an error and must
+        // reach the caller. Re-awaiting updateCallbackDone rethrows the callback failure, while a
+        // merely skipped/aborted transition (callback succeeded) resolves and stays swallowed.
+        await transition.updateCallbackDone;
+    }
+    return true;
 }
