@@ -112,7 +112,7 @@ internal class BrouterRouteRenderer
         builder.AddAttribute(2, "Value", _route);
         builder.AddAttribute(3, "ChildContent", (RenderFragment)(b =>
         {
-            b.AddContent(0, _route.ChildContent);
+            b.AddContent(0, _route.ChildContent ?? _route.Routes);
             // A KeepAlive route that has been shown at least once keeps rendering while unmatched -
             // hidden - so its component state survives until it matches again (unless ClearKeepAlive
             // dropped it, in which case it re-renders only once it matches again).
@@ -362,11 +362,108 @@ internal class BrouterRouteRenderer
         }
         else if (_route.Component is not null)
         {
-            b3.OpenComponent(0, _route.Component);
-            ApplyTypedParameters(b3, _route.Component, routeParams, _route.Brouter?.CurrentLocation,
-                _route.BindComponentParametersByName ? _route.TemplateParameterNames : null);
-            b3.CloseComponent();
+            // Brouter's effective Found template (the built-in Router.Found counterpart) - the Found
+            // parameter, or the built-in AuthorizeRouteView/RouteView composition that Brouter's
+            // NotAuthorized/Authorizing/DefaultLayout/Resource parameters enable (see EffectiveFound). The
+            // template renders the page itself - typically via RouteView/AuthorizeRouteView bound to
+            // the framework RouteData built here - so Brouter must not also instantiate the component.
+            // Which branch runs is fixed for the app's lifetime (both sources are wired up before the
+            // initial match), so sharing sequence 0 with the direct-instantiation branch diffs cleanly.
+            var found = _route.Brouter?.EffectiveFound;
+            if (found is not null)
+            {
+                b3.AddContent(0, found(GetFrameworkRouteData(routeParams)));
+            }
+            else
+            {
+                EnsureNoAuthorizationRequirements(_route.Component);
+                b3.OpenComponent(0, _route.Component);
+                ApplyTypedParameters(b3, _route.Component, routeParams, _route.Brouter?.CurrentLocation,
+                    _route.BindComponentParametersByName ? _route.TemplateParameterNames : null);
+                b3.CloseComponent();
+            }
         }
+    }
+
+    // Whether a component type declares authorization requirements ([Authorize] / any IAuthorizeData),
+    // cached per type: the check runs on every native render of a Component route.
+    private static readonly System.Collections.Concurrent.ConcurrentDictionary<Type, bool> _requiresAuthorizationCache = new();
+
+    /// <summary>
+    /// Fail-closed guard for code paths that cannot enforce authorization: a component carrying
+    /// <c>[Authorize]</c> must never be instantiated by one. The built-in
+    /// <c>NotAuthorized</c>/<c>Authorizing</c> composition never reaches this (the framework's
+    /// <c>AuthorizeRouteView</c> enforces the attribute there); a user-supplied <c>Brouter.Found</c>
+    /// template owns its own auth stack, like the built-in Router. This covers direct instantiation
+    /// by Brouter itself - inline or inside a <see cref="BrouterOutlet"/> - and the layout-only
+    /// <c>DefaultLayout</c> composition, because the framework's plain <c>RouteView</c> performs
+    /// no authorization check at all.
+    /// </summary>
+    internal static void EnsureNoAuthorizationRequirements(Type componentType)
+    {
+        var requiresAuthorization = _requiresAuthorizationCache.GetOrAdd(
+            componentType,
+            static t => t.GetCustomAttributes(inherit: true).OfType<Microsoft.AspNetCore.Authorization.IAuthorizeData>().Any());
+
+        if (requiresAuthorization)
+        {
+            throw new InvalidOperationException(
+                $"The component '{componentType.FullName}' declares authorization requirements ([Authorize]), " +
+                "but it is being rendered without authorization support, which would silently skip the check. " +
+                "Set Brouter's NotAuthorized/Authorizing parameters (or a Found template ending in AuthorizeRouteView) " +
+                "so pages render through the framework's authorization pipeline, or enforce access with a route " +
+                "Guard and remove the [Authorize] attribute from the component.");
+        }
+    }
+
+    // Cached framework RouteData handed to Brouter.Found, rebuilt only when the matched parameters
+    // instance or the component type actually changes (same reuse rationale as the wrapper caches
+    // above: a stable instance keeps the Found fragment's consumers - RouteView/AuthorizeRouteView -
+    // quiet on renders where nothing routing-related changed). Keyed on the BrouterRouteParameters
+    // reference: RenderRoute reissues it exactly when a navigation commits new routing state, and
+    // per-parameter keep-alive entries each carry their own frozen instance, so a hidden kept page
+    // keeps seeing the route values it was deactivated with.
+    private RouteData? _cachedPageRouteData;
+    private BrouterRouteParameters? _cachedPageRouteDataParamsRef;
+    private Type? _cachedPageRouteDataComponentRef;
+
+    private RouteData GetFrameworkRouteData(BrouterRouteParameters routeParams)
+    {
+        if (_cachedPageRouteData is null
+            || ReferenceEquals(_cachedPageRouteDataParamsRef, routeParams) is false
+            || ReferenceEquals(_cachedPageRouteDataComponentRef, _route.Component) is false)
+        {
+            // The merged parameter values (ancestor + own template parameters) mirror what the
+            // built-in router's RouteData.RouteValues carries for the matched page: for a flat
+            // discovered @page route they are exactly the template's matched values, constraint-
+            // converted (e.g. {id:int} -> boxed int) the same way RouteView expects to bind them,
+            // normalized with explicit nulls for optional parameters the URL left unfilled.
+            _cachedPageRouteData = new RouteData(_route.Component!,
+                NormalizeRouteValues(routeParams.Values, _route.TemplateParameterNames));
+            _cachedPageRouteDataParamsRef = routeParams;
+            _cachedPageRouteDataComponentRef = _route.Component;
+        }
+        return _cachedPageRouteData;
+    }
+
+    // Framework-router parity for RouteData.RouteValues: the built-in router adds an explicit null
+    // entry for every route parameter the URL left unfilled (trailing optionals), so RouteView still
+    // emits a parameter frame for it and a page instance reused across navigations (e.g.
+    // /profile/saleh -> /profile) has the stale value reset instead of silently kept. Returns the
+    // original dictionary unchanged when every template parameter is present.
+    internal static IReadOnlyDictionary<string, object?> NormalizeRouteValues(
+        IReadOnlyDictionary<string, object?> values, IReadOnlySet<string>? templateParameterNames)
+    {
+        if (templateParameterNames is null || templateParameterNames.Count == 0) return values;
+
+        Dictionary<string, object?>? augmented = null;
+        foreach (var name in templateParameterNames)
+        {
+            if (values.ContainsKey(name)) continue;
+            augmented ??= new Dictionary<string, object?>(values, StringComparer.OrdinalIgnoreCase);
+            augmented[name] = null;
+        }
+        return augmented ?? values;
     }
 
     internal static void ApplyTypedParameters(RenderTreeBuilder builder, [System.Diagnostics.CodeAnalysis.DynamicallyAccessedMembers(System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.PublicProperties)] Type componentType, BrouterRouteParameters parameters, BrouterLocation? location, IReadOnlySet<string>? conventionalTemplateParameters = null)
