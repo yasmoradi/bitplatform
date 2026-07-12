@@ -156,6 +156,17 @@ jobs:
         path: ./TestPostgreSQL/src/Tests/TestResults
         retention-days: 14
 
+    - name: Fail job if any test run failed
+      if: ${{ !cancelled() }}
+      run: |
+        if [[ "${{ steps.test-postgresql-blazorserver.outcome }}" == "failure" || \
+              "${{ steps.test-postgresql-blazorwasm.outcome }}" == "failure" || \
+              "${{ steps.test-postgresql-blazorwasm-prerender.outcome }}" == "failure" || \
+              "${{ steps.test-postgresql-invariantglobalization.outcome }}" == "failure" ]]; then
+          echo "::error::One or more PostgreSQL test runs failed. See the step results and uploaded artifacts above."
+          exit 1
+        fi
+
 
 
   test-boilerplate-mssql:
@@ -274,6 +285,17 @@ jobs:
         path: ./TestSqlServer/src/Tests/TestResults
         retention-days: 14
 
+    - name: Fail job if any test run failed
+      if: ${{ !cancelled() }}
+      run: |
+        if [[ "${{ steps.test-mssql-blazorserver.outcome }}" == "failure" || \
+              "${{ steps.test-mssql-blazorwasm.outcome }}" == "failure" || \
+              "${{ steps.test-mssql-blazorwasm-prerender.outcome }}" == "failure" || \
+              "${{ steps.test-mssql-invariantglobalization.outcome }}" == "failure" ]]; then
+          echo "::error::One or more SQL Server test runs failed. See the step results and uploaded artifacts above."
+          exit 1
+        fi
+
 
 
   build-boilerplate-configurations:
@@ -332,13 +354,13 @@ jobs:
 
     - name: Build sample configuration 1
       run: |
-        dotnet new bit-bp --name TestProject --database SqlServer --filesStorage AzureBlobStorage --api Integrated --captcha reCaptcha --pipeline Azure --module Admin --offlineDb --appInsights --sentry --signalR --notification --cloudflare --ads --aspire --redis --multitenancy
+        dotnet new bit-bp --name TestProject --database SqlServer --filesStorage AzureBlobStorage --api Integrated --captcha reCaptcha --pipeline Azure --module Admin --offlineDb --appInsights --sentry --signalR --notification --cloudflare --ads --aspire --redis --multitenant
         dotnet build TestProject/TestProject.sln -p:InvariantGlobalization=false -p:Environment=Staging
         rm -r "TestProject"
 
     - name: Build sample configuration 2
       run: |
-        dotnet new bit-bp --name TestProject2 --database Other --filesStorage S3 --api Standalone --captcha None --pipeline None --module None --offlineDb false --appInsights false --sentry false --signalR false --notification false --cloudflare false --ads false --aspire true --redis false --multitenancy false
+        dotnet new bit-bp --name TestProject2 --database Other --filesStorage S3 --api Standalone --captcha None --pipeline None --module None --offlineDb false --appInsights false --sentry false --signalR false --notification false --cloudflare false --ads false --aspire true --redis false --multitenant false
         dotnet build TestProject2/TestProject2.slnx -p:InvariantGlobalization=true -p:Environment=Development
         rm -r "TestProject2"
 

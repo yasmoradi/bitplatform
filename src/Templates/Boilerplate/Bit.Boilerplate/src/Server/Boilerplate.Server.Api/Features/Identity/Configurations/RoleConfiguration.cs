@@ -1,6 +1,6 @@
 ﻿//+:cnd:noEmit
 using Boilerplate.Server.Api.Features.Identity.Models;
-//#if (multitenancy == true)
+//#if (multitenant == true)
 using Boilerplate.Server.Api.Features.Tenants;
 //#endif
 
@@ -20,7 +20,7 @@ public partial class RoleConfiguration : IEntityTypeConfiguration<Role>
             .WithOne(ur => ur.Role)
             .HasForeignKey(ur => ur.RoleId);
 
-        //#if (multitenancy == true)
+        //#if (multitenant == true)
         // The base IdentityDbContext adds a global unique index (RoleNameIndex) on NormalizedName that conflicts
         // with having a t-admin role per tenant, so its uniqueness gets replaced by the following filtered unique indexes:
         // 1. The role name must be unique within the tenant (When TenantId is not null).
@@ -54,18 +54,41 @@ public partial class RoleConfiguration : IEntityTypeConfiguration<Role>
         //#if (IsInsideProjectTemplate == true)
         /*
         //#endif
-        //#if (multitenancy != true)
+        //#if (multitenant != true)
         builder.HasIndex(role => role.Name).IsUnique();
         //#endif
         //#if (IsInsideProjectTemplate == true)
         */
         //#endif
 
-        builder.HasData(new Role { Id = Guid.Parse("8ff71671-a1d6-5f97-abb9-d87d7b47d6e7"), Name = AppRoles.GlobalAdmin, NormalizedName = AppRoles.GlobalAdmin.ToUpperInvariant(), ConcurrencyStamp = "8ff71671-a1d6-5f97-abb9-d87d7b47d6e7" });
-        //#if (multitenancy == true)
+        //#if (multitenant == true)
         // The default store tenant's admin role.
-        builder.HasData(new Role { Id = Guid.Parse("7ff71671-a1d6-5f97-abb9-d87d7b47d6e9"), Name = AppRoles.TenantAdmin, NormalizedName = AppRoles.TenantAdmin.ToUpperInvariant(), TenantId = TenantConfiguration.FallbackTenantId, ConcurrencyStamp = "7ff71671-a1d6-5f97-abb9-d87d7b47d6e9" });
+        builder.HasData(new Role
+        {
+            Id = Guid.Parse("7ff71671-a1d6-5f97-abb9-d87d7b47d6e9"),
+            Name = AppRoles.TenantAdmin,
+            NormalizedName = AppRoles.TenantAdmin.ToUpperInvariant(),
+            TenantId = TenantConfiguration.FallbackTenantId,
+            ConcurrencyStamp = "7ff71671-a1d6-5f97-abb9-d87d7b47d6e9"
+        });
         //#endif
-        builder.HasData(new Role { Id = Guid.Parse("9ff71672-a1d5-4f97-abb7-d87d6b47d5e8"), Name = AppRoles.Demo, NormalizedName = AppRoles.Demo.ToUpperInvariant(), ConcurrencyStamp = "9ff71672-a1d5-4f97-abb7-d87d6b47d5e8" });
+        builder.HasData(new Role
+        {
+            Id = Guid.Parse("8ff71671-a1d6-5f97-abb9-d87d7b47d6e7"),
+            Name = AppRoles.GlobalAdmin,
+            NormalizedName = AppRoles.GlobalAdmin.ToUpperInvariant(),
+            ConcurrencyStamp = "8ff71671-a1d6-5f97-abb9-d87d7b47d6e7"
+        });
+
+        builder.HasData(new Role
+        {
+            Id = Guid.Parse("9ff71672-a1d5-4f97-abb7-d87d6b47d5e8"),
+            Name = AppRoles.Demo,
+            NormalizedName = AppRoles.Demo.ToUpperInvariant(),
+            ConcurrencyStamp = "9ff71672-a1d5-4f97-abb7-d87d6b47d5e8",
+            //#if (multitenant == true)
+            TenantId = TenantConfiguration.FallbackTenantId
+            //#endif
+        });
     }
 }

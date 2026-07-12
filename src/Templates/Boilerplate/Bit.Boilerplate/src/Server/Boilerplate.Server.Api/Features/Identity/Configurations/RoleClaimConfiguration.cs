@@ -21,7 +21,7 @@ public partial class RoleClaimConfiguration : IEntityTypeConfiguration<RoleClaim
             RoleId = globalAdminRoleId
         });
 
-        //#if (multitenancy == true)
+        //#if (multitenant == true)
         // Unlimited privileged sessions for the default store tenant's admins
         var tenantAdminRoleId = Guid.Parse("7ff71671-a1d6-5f97-abb9-d87d7b47d6e9");
         builder.HasData(new RoleClaim
@@ -36,9 +36,7 @@ public partial class RoleClaimConfiguration : IEntityTypeConfiguration<RoleClaim
 
         // Assign non admin features to demo role
         var demoRoleId = Guid.Parse("9ff71672-a1d5-4f97-abb7-d87d6b47d5e8");
-        foreach (var feature in AppFeatures.GetGlobalAdminFeatures()
-            .Where(f => f.Group != typeof(AppFeatures.System)
-                     && f.Group != typeof(AppFeatures.Management)))
+        foreach (var feature in AppFeatures.GetDemoFeatures())
         {
             builder.HasData(new
             {

@@ -12,10 +12,10 @@ namespace Boilerplate.Server.Api.Features.Identity;
 [ApiVersion(1)]
 [ApiController, Route("api/v{v:apiVersion}/[controller]/[action]")]
 [Authorize(Policy = AuthPolicies.PRIVILEGED_ACCESS),
-    //#if (multitenancy == true)
+    //#if (multitenant == true)
     Authorize(Policy = AuthPolicies.TENANT_SELECTED),
     //#endif
-    Authorize(Policy = AppFeatures.Management.Users_Write)]
+    Authorize(Policy = AppFeatures.Management.Users_Manage)]
 public partial class UserManagementController : AppControllerBase, IUserManagementController
 {
     [AutoInject] private UserManager<User> userManager = default!;
@@ -28,8 +28,8 @@ public partial class UserManagementController : AppControllerBase, IUserManageme
     [HttpGet, EnableQuery]
     public IQueryable<UserDto> GetAllUsers()
     {
-        //#if (multitenancy == true)
-        if (User.HasFeature(AppFeatures.Management.Tenants_Write_Global) is false)
+        //#if (multitenant == true)
+        if (User.HasFeature(AppFeatures.Management.Tenants_Manage_Global) is false)
         {
             // Non Global admins may only see the users of the current tenant that have accepted their invitation.
             var tenantId = User.GetTenantId();
@@ -46,8 +46,8 @@ public partial class UserManagementController : AppControllerBase, IUserManageme
 
         var usersQuery = DbContext.Users.AsQueryable();
 
-        //#if (multitenancy == true)
-        if (User.HasFeature(AppFeatures.Management.Tenants_Write_Global) is false)
+        //#if (multitenant == true)
+        if (User.HasFeature(AppFeatures.Management.Tenants_Manage_Global) is false)
         {
             var tenantId = User.GetTenantId();
             usersQuery = usersQuery.Where(u => u.Tenants.Any(tu => tu.TenantId == tenantId && tu.AcceptedOn != null));
@@ -62,8 +62,8 @@ public partial class UserManagementController : AppControllerBase, IUserManageme
     {
         var query = DbContext.UserSessions.Where(us => us.UserId == userId);
 
-        //#if (multitenancy == true)
-        if (User.HasFeature(AppFeatures.Management.Tenants_Write_Global) is false)
+        //#if (multitenant == true)
+        if (User.HasFeature(AppFeatures.Management.Tenants_Manage_Global) is false)
         {
             // Non Global admins may only see the sessions that are created in (signed into) the current tenant.
             var tenantId = User.GetTenantId();
@@ -81,10 +81,10 @@ public partial class UserManagementController : AppControllerBase, IUserManageme
         if (User.GetUserId() == userId)
             throw new BadRequestException(Localizer[nameof(AppStrings.UserCantRemoveItselfErrorMessage)]);
 
-        //#if (multitenancy == true)
+        //#if (multitenant == true)
         await EnsureUserIsInCurrentTenant(userId, cancellationToken);
 
-        if (User.HasFeature(AppFeatures.Management.Tenants_Write_Global) is false)
+        if (User.HasFeature(AppFeatures.Management.Tenants_Manage_Global) is false)
         {
             // Only global admins can actually delete a user account. Deleting a user as a tenant
             // admin means removing her from the current tenant instead.
@@ -107,9 +107,17 @@ public partial class UserManagementController : AppControllerBase, IUserManageme
                                                                    .ToListAsync(cancellationToken);
         //#endif
 
-        await DbContext.UserSessions.Where(us => us.UserId == userId).ExecuteDeleteAsync(cancellationToken);
+        var strategy = DbContext.Database.CreateExecutionStrategy();
+        await strategy.ExecuteAsync(async () =>
+        {
+            await using var transaction = await DbContext.Database.BeginTransactionAsync(cancellationToken);
 
-        await userManager.DeleteAsync(user);
+            await DbContext.UserSessions.Where(us => us.UserId == userId).ExecuteDeleteAsync(cancellationToken);
+
+            await userManager.DeleteAsync(user);
+
+            await transaction.CommitAsync(cancellationToken);
+        });
 
         //#if (signalR == true)
         foreach (var id in userSessionConnectionIds)
@@ -129,11 +137,11 @@ public partial class UserManagementController : AppControllerBase, IUserManageme
         var entityToDelete = await DbContext.UserSessions.FindAsync([id], cancellationToken)
             ?? throw new ResourceNotFoundException().WithData("Reason", "User session not found.");
 
-        //#if (multitenancy == true)
+        //#if (multitenant == true)
         await EnsureUserIsInCurrentTenant(entityToDelete.UserId, cancellationToken);
 
         // Non Global admins may only revoke the sessions that are signed into the current tenant (See GetUserSessions).
-        if (User.HasFeature(AppFeatures.Management.Tenants_Write_Global) is false && entityToDelete.TenantId != User.GetTenantId())
+        if (User.HasFeature(AppFeatures.Management.Tenants_Manage_Global) is false && entityToDelete.TenantId != User.GetTenantId())
             throw new ResourceNotFoundException().WithData("Reason", "Non Global admins may only revoke the sessions that are signed into the current tenant.");
         //#endif
 
@@ -153,7 +161,7 @@ public partial class UserManagementController : AppControllerBase, IUserManageme
     [Authorize(Policy = AuthPolicies.ELEVATED_ACCESS)]
     public async Task RevokeAllUserSessions(Guid userId, CancellationToken cancellationToken)
     {
-        //#if (multitenancy == true)
+        //#if (multitenant == true)
         await EnsureUserIsInCurrentTenant(userId, cancellationToken);
         //#endif
 
@@ -161,8 +169,8 @@ public partial class UserManagementController : AppControllerBase, IUserManageme
 
         var sessionsToRevokeQuery = DbContext.UserSessions.Where(us => us.Id != userSessionId && us.UserId == userId);
 
-        //#if (multitenancy == true)
-        if (User.HasFeature(AppFeatures.Management.Tenants_Write_Global) is false)
+        //#if (multitenant == true)
+        if (User.HasFeature(AppFeatures.Management.Tenants_Manage_Global) is false)
         {
             // Non Global admins may only revoke the sessions that are signed into the current tenant (See GetUserSessions).
             var tenantId = User.GetTenantId();
@@ -195,13 +203,13 @@ public partial class UserManagementController : AppControllerBase, IUserManageme
         return user;
     }
 
-    //#if (multitenancy == true)
+    //#if (multitenant == true)
     /// <summary>
     /// Non Global admins may only manage the users of the current tenant that have accepted their invitation.
     /// </summary>
     private async Task EnsureUserIsInCurrentTenant(Guid userId, CancellationToken cancellationToken)
     {
-        if (User.HasFeature(AppFeatures.Management.Tenants_Write_Global))
+        if (User.HasFeature(AppFeatures.Management.Tenants_Manage_Global))
             return;
 
         var tenantId = User.GetTenantId();

@@ -20,15 +20,15 @@ public partial class MainLayout
             }
         ];
 
-        //#if (multitenancy == true)
+        //#if (multitenant == true)
         var tenantIsSelected = await authorizationService.IsAuthorized(authUser!, AuthPolicies.TENANT_SELECTED);
         //#endif
 
         //#if (module == "Admin")
         var (dashboard, manageProductCatalog) = await (authorizationService.IsAuthorized(authUser!, AppFeatures.AdminPanel.Dashboard_View),
-            authorizationService.IsAuthorized(authUser!, AppFeatures.AdminPanel.ProductCatalog_Write));
+            authorizationService.IsAuthorized(authUser!, AppFeatures.AdminPanel.ProductCatalog_Manage));
 
-        //#if (multitenancy == true)
+        //#if (multitenant == true)
         if (tenantIsSelected is false)
         {
             dashboard = manageProductCatalog = false;
@@ -78,7 +78,7 @@ public partial class MainLayout
         //#endif
 
         //#if (sample == true || offlineDb == true)
-        if (await authorizationService.IsAuthorized(authUser!, AppFeatures.Todo.Todo_Write_Self))
+        if (await authorizationService.IsAuthorized(authUser!, AppFeatures.Todo.Todo_Manage_Self))
         {
             //#if (offlineDb == true)
             navPanelItems.Add(new()
@@ -112,21 +112,21 @@ public partial class MainLayout
             Url = PageUrls.About,
         });
 
-        var (manageRoles, manageUsers, manageAiPrompt) = await (authorizationService.IsAuthorized(authUser!, AppFeatures.Management.Roles_Write),
-            authorizationService.IsAuthorized(authUser!, AppFeatures.Management.Users_Write),
+        var (manageRoles, manageUsers, manageAiPrompt) = await (authorizationService.IsAuthorized(authUser!, AppFeatures.Management.Roles_Manage),
+            authorizationService.IsAuthorized(authUser!, AppFeatures.Management.Users_Manage),
             authorizationService.IsAuthorized(authUser!, AppFeatures.Management.SystemPrompts_Write));
 
-        //#if (multitenancy == true)
+        //#if (multitenant == true)
         if (tenantIsSelected is false)
         {
             manageRoles = manageUsers = manageAiPrompt = false;
         }
 
-        var manageTenantsGlobally = await authorizationService.IsAuthorized(authUser!, AppFeatures.Management.Tenants_Write_Global);
+        var manageTenantsGlobally = await authorizationService.IsAuthorized(authUser!, AppFeatures.Management.Tenants_Manage_Global);
         //#endif
 
         if (manageRoles || manageUsers || manageAiPrompt
-            //#if (multitenancy == true)
+            //#if (multitenant == true)
             || manageTenantsGlobally
             //#endif
             )
@@ -172,7 +172,7 @@ public partial class MainLayout
             }
             //#endif
 
-            //#if (multitenancy == true)
+            //#if (multitenant == true)
             if (manageTenantsGlobally)
             {
                 managementItem.ChildItems.Add(new()
