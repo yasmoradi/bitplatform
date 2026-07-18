@@ -1,4 +1,4 @@
-﻿//+:cnd:noEmit
+//+:cnd:noEmit
 using Microsoft.Extensions.Logging;
 //#if (appInsights == true)
 using Azure.Monitor.OpenTelemetry.Exporter;
@@ -114,7 +114,7 @@ public static partial class MauiProgram
 
             //-:cnd:noEmit
 #if Android
-        services.AddClientMauiProjectAndroidServices(builder.Configuration);
+            services.AddClientMauiProjectAndroidServices(builder.Configuration);
 #elif iOS
         services.AddClientMauiProjectIosServices(builder.Configuration);
 #elif Mac
