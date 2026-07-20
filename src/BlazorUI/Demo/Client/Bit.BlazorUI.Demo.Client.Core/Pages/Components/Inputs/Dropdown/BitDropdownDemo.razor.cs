@@ -2,6 +2,8 @@
 
 public partial class BitDropdownDemo
 {
+    [CascadingParameter(Name = nameof(RenderForMcpClient))] public bool RenderForMcpClient { get; set; }
+
     private readonly List<ComponentParameter> componentParameters =
     [
         new()
@@ -137,17 +139,17 @@ public partial class BitDropdownDemo
         },
         new()
         {
-            Name = "DefaultValue",
-            Type = "string?",
-            DefaultValue = "null",
-            Description = "The default value that will be initially used to set selected item if the Value parameter is not set.",
-        },
-        new()
-        {
             Name = "DefaultValues",
             Type = "IEnumerable<string?>?",
             DefaultValue = "null",
             Description = "The default values that will be initially used to set selected items in multi select mode if the Values parameter is not set.",
+        },
+        new()
+        {
+            Name = "DebounceTime",
+            Type = "int",
+            DefaultValue = "0",
+            Description = "The debounce time in milliseconds for the search and combo box inputs (applied when Immediate is enabled).",
         },
         new()
         {
@@ -202,6 +204,13 @@ public partial class BitDropdownDemo
             Type = "IEnumerable<TItem>?",
             DefaultValue = "null",
             Description = "The initial items that will be used to set selected items when using an ItemProvider.",
+        },
+        new()
+        {
+            Name = "Immediate",
+            Type = "bool",
+            DefaultValue = "false",
+            Description = "Searches the items immediately as the user types in the search box or combo box input (based on the 'oninput' HTML event).",
         },
         new()
         {
@@ -498,6 +507,13 @@ public partial class BitDropdownDemo
             Type = "RenderFragment<<TItem, TValue>>?",
             DefaultValue = "null",
             Description = "The custom template for the text of the dropdown.",
+        },
+        new()
+        {
+            Name = "ThrottleTime",
+            Type = "int",
+            DefaultValue = "0",
+            Description = "The throttle time in milliseconds for the search and combo box inputs (applied when Immediate is enabled).",
         },
         new()
         {

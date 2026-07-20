@@ -1,0 +1,23 @@
+@namespace Bit.BlazorUI
+@inherits BitComponentBase
+@typeparam TItem
+
+<div @ref="RootElement" @attributes="HtmlAttributes"
+     id="@_Id"
+     style="@StyleBuilder.Value"
+     class="@ClassBuilder.Value"
+     dir="@Dir?.ToString().ToLower()">
+    @if (ChildContent is not null || Options is not null)
+    {
+        <CascadingValue Value="this" IsFixed="true">
+            @(Options ?? ChildContent)
+        </CascadingValue>
+    }
+    else
+    {
+        @foreach (var item in _items)
+        {
+            <_BitAccordionListItem @key="@GetItemKey(item)" AccordionList="this" Item="item" />
+        }
+    }
+</div>

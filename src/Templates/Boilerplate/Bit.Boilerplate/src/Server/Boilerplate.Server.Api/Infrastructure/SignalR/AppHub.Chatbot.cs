@@ -1,4 +1,4 @@
-﻿//+:cnd:noEmit
+//+:cnd:noEmit
 using System.Diagnostics.Metrics;
 using Microsoft.AspNetCore.SignalR;
 using System.Runtime.CompilerServices;
@@ -95,7 +95,7 @@ public partial class AppHub
     private async Task HandleException(Exception exp, CancellationToken cancellationToken)
     {
         await using var scope = serviceProvider.CreateAsyncScope();
-        var serverExceptionHandler = scope.ServiceProvider.GetRequiredService<ServerExceptionHandler>();
+        var serverExceptionHandler = scope.ServiceProvider.GetRequiredService<ApiServerExceptionHandler>();
         var problemDetails = serverExceptionHandler.Handle(exp);
         if (problemDetails is null || serverExceptionHandler.IgnoreException(serverExceptionHandler.UnWrapException(exp)))
             return;

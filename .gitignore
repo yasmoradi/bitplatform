@@ -222,6 +222,12 @@ ModelManifest.xml
 # Rider
 .idea
 
+#kiro
+.kiro
+
+#cursor
+.cursor
+
 profile.arm.json
 
 # bit
@@ -243,6 +249,13 @@ _book
 /src/BlazorUI/Bit.BlazorUI.Extras/wwwroot/scripts/*.js
 /src/BlazorUI/Bit.BlazorUI.Extras/wwwroot/**/*.css.gz
 !/src/BlazorUI/Bit.BlazorUI.Extras/wwwroot/quilljs/*.css
+!/src/BlazorUI/Bit.BlazorUI.Extras/wwwroot/leaflet/*.css
+
+/src/BlazorUI/Bit.BlazorUI.Legacy/**/*.css
+/src/BlazorUI/Bit.BlazorUI.Legacy/Scripts/*.js
+/src/BlazorUI/Bit.BlazorUI.Legacy/wwwroot/scripts/*.js
+/src/BlazorUI/Bit.BlazorUI.Legacy/wwwroot/**/*.css.gz
+!/src/BlazorUI/Bit.BlazorUI.Legacy/wwwroot/quilljs/*.css
 
 /src/BlazorUI/Bit.BlazorUI.Assets/**/*.css
 /src/BlazorUI/Bit.BlazorUI.Assets/wwwroot/scripts/*.js
@@ -258,6 +271,12 @@ _book
 
 /src/Butil/Bit.Butil/Scripts/**/*.js
 /src/Butil/Bit.Butil/wwwroot/**/*.js
+
+/src/Brouter/Bit.Brouter/Scripts/**/*.js
+/src/Brouter/Bit.Brouter/wwwroot/**/*.js
+
+/src/Bmotion/Bit.Bmotion/Scripts/**/*.js
+/src/Bmotion/Bit.Bmotion/wwwroot/**/*.js
 
 /src/BlazorUI/Demo/Bit.BlazorUI.Demo.Server/BitFileUploaderFiles/*.*
 /src/BlazorUI/Demo/Client/Bit.BlazorUI.Demo.Client.Core/wwwroot/scripts/app.js

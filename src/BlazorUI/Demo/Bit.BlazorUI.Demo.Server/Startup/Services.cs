@@ -1,10 +1,13 @@
 ﻿using System.ClientModel.Primitives;
 using System.IO.Compression;
 using Bit.BlazorUI.Demo.Server.Services;
+using Microsoft.AspNetCore.Components.Web;
+using Bit.BlazorUI.Demo.Client.Core.Components;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.OData;
 using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.Extensions.AI;
+using Azure.Monitor.OpenTelemetry.AspNetCore;
 
 namespace Bit.BlazorUI.Demo.Server.Startup;
 
@@ -49,6 +52,14 @@ public static class Services
             .WithHttpTransport()
             .WithToolsFromAssembly();
 
+        services.AddScoped<HtmlRenderer>();
+        services.AddCascadingValue("RenderForMcpClient", sp =>
+        {
+            var httpContext = sp.GetRequiredService<IHttpContextAccessor>().HttpContext;
+            return httpContext?.Items?.ContainsKey("RenderForMcpClient") is true
+                || httpContext?.Request?.Query?.ContainsKey("showallcodes") is true;
+        });
+
         services.Configure<ForwardedHeadersOptions>(options =>
         {
             options.ForwardedHeaders = ForwardedHeaders.All;
@@ -87,6 +98,20 @@ public static class Services
         services.Configure<AppSettings>(configuration.GetSection(nameof(AppSettings)));
 
         services.AddTransient(sp => sp.GetRequiredService<IOptionsSnapshot<AppSettings>>().Value);
+
+        // Add Azure Application Insights using OpenTelemetry if connection string is configured in appsettings.json
+        var appInsightsConnectionString = configuration["ApplicationInsights:ConnectionString"];
+        if (string.IsNullOrWhiteSpace(appInsightsConnectionString) is false)
+        {
+            services.AddOpenTelemetry().UseAzureMonitor(options =>
+            {
+                options.ConnectionString = appInsightsConnectionString;
+            }).WithLogging(configureBuilder: null, configureOptions: options =>
+            {
+                options.IncludeScopes = true;
+                options.IncludeFormattedMessage = true;
+            });
+        }
 
         services.AddEndpointsApiExplorer();
 

@@ -125,4 +125,64 @@ public class BitOtpInputTests : BunitTestContext
         Assert.AreEqual(inputTypeAttribute, bitOtpInput.GetAttribute("type"));
         Assert.AreEqual(inputModeAttribute, bitOtpInput.GetAttribute("inputmode"));
     }
+
+    [TestMethod]
+    public void BitOtpInputShouldRespondToFocusEventsWithIndex()
+    {
+        int focusInIndex = -1;
+        int focusOutIndex = -1;
+
+        var com = RenderComponent<BitOtpInput>(parameters =>
+        {
+            parameters.Add(p => p.Length, 3);
+            parameters.Add(p => p.OnFocusIn, args => focusInIndex = args.Index);
+            parameters.Add(p => p.OnFocusOut, args => focusOutIndex = args.Index);
+        });
+
+        var input = com.FindAll(".bit-otp-inp")[1];
+
+        input.FocusIn();
+        Assert.AreEqual(1, focusInIndex);
+
+        com.FindAll(".bit-otp-inp")[1].FocusOut();
+        Assert.AreEqual(1, focusOutIndex);
+    }
+
+    [TestMethod]
+    public void BitOtpInputShouldToggleFocusedClassWithoutFocusCallbacks()
+    {
+        // The Focused class/style must be applied based purely on the input focus state,
+        // independent of whether OnFocusIn/OnFocusOut delegates are attached.
+        var com = RenderComponent<BitOtpInput>(parameters =>
+        {
+            parameters.Add(p => p.Length, 3);
+            parameters.Add(p => p.Classes, new BitOtpInputClassStyles { Focused = "custom-focused" });
+        });
+
+        com.FindAll(".bit-otp-inp")[1].FocusIn();
+        Assert.IsTrue(com.FindAll(".bit-otp-inp")[1].ClassList.Contains("custom-focused"));
+
+        com.FindAll(".bit-otp-inp")[1].FocusOut();
+        Assert.IsFalse(com.FindAll(".bit-otp-inp")[1].ClassList.Contains("custom-focused"));
+    }
+
+    [TestMethod]
+    public void BitOtpInputShouldRespectDefaultValue()
+    {
+        var defaultValue = "1234";
+
+        var com = RenderComponent<BitOtpInput>(parameters =>
+        {
+            parameters.Add(p => p.Length, 4);
+            parameters.Add(p => p.DefaultValue, defaultValue);
+        });
+
+        Assert.AreEqual(defaultValue, com.Instance.Value);
+
+        var inputs = com.FindAll(".bit-otp-inp");
+        Assert.AreEqual("1", inputs[0].GetAttribute("value"));
+        Assert.AreEqual("2", inputs[1].GetAttribute("value"));
+        Assert.AreEqual("3", inputs[2].GetAttribute("value"));
+        Assert.AreEqual("4", inputs[3].GetAttribute("value"));
+    }
 }

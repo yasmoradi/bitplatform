@@ -1,0 +1,21 @@
+﻿@using Bit.Brouter
+
+<Brouter NotFoundUrl="/404">
+    <Broute Path="/secret" Guard="@Deny">
+        <Content><div data-testid="ok">should not render</div></Content>
+    </Broute>
+    <Broute Path="/login">
+        <Content><div data-testid="login">login</div></Content>
+    </Broute>
+    <Broute Path="/404">
+        <Content>404</Content>
+    </Broute>
+</Brouter>
+
+@code {
+    private ValueTask Deny(BrouterNavigationContext ctx)
+    {
+        ctx.Redirect("/login");
+        return ValueTask.CompletedTask;
+    }
+}

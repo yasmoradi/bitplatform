@@ -1,4 +1,4 @@
-﻿namespace Bit.BlazorUI.Demo.Client.Core.Pages.Components.Buttons.ActionButton;
+namespace Bit.BlazorUI.Demo.Client.Core.Pages.Components.Buttons.ActionButton;
 
 public partial class BitActionButtonDemo
 {
@@ -7,24 +7,19 @@ public partial class BitActionButtonDemo
     Create account
 </BitActionButton>
 
-<BitActionButton IconPosition=""BitIconPosition.End"" IconName=""@BitIconName.AddFriend"">
-    End Icon
-</BitActionButton>
-
 <BitActionButton IconName=""@BitIconName.AddFriend"" IsEnabled=""false"">
     Disabled
 </BitActionButton>
 
 <BitActionButton IconName=""@BitIconName.AlarmClock"" AriaLabel=""Call"">
-    AriaLabel
+    AriaLabel=""Call""
 </BitActionButton>
 
 <BitActionButton>
     No Icon
 </BitActionButton>
 
-<BitActionButton IconOnly IconName=""@BitIconName.Phone"">
-</BitActionButton>";
+<BitActionButton IconOnly IconName=""@BitIconName.Phone"" AriaLabel=""Call"" />";
 
     private readonly string example2RazorCode = @"
 <BitActionButton IconPosition=""BitIconPosition.Start"" IconName=""@BitIconName.AddFriend"">
@@ -45,6 +40,15 @@ public partial class BitActionButtonDemo
 </BitActionButton>";
 
     private readonly string example4RazorCode = @"
+<BitActionButton IconName=""@BitIconName.Download"" Href=""/images/bit-logo.svg"" Download="""">
+    Download the logo
+</BitActionButton>
+
+<BitActionButton IconName=""@BitIconName.Download"" Href=""/images/bit-logo.svg"" Download=""bit-platform-logo.svg"">
+    Download with a custom file name
+</BitActionButton>";
+
+    private readonly string example5RazorCode = @"
 <BitActionButton Rel=""BitLinkRels.NoFollow"" Href=""https://bitplatform.dev"" Target=""_blank"" IconName=""@BitIconName.Globe"">
     Open bitplatform.dev with a rel attribute (nofollow)
 </BitActionButton>
@@ -53,7 +57,7 @@ public partial class BitActionButtonDemo
     Open bitplatform.dev with a rel attribute (nofollow & noreferrer)
 </BitActionButton>";
 
-    private readonly string example5RazorCode = @"
+    private readonly string example6RazorCode = @"
 <BitActionButton IconName=""@BitIconName.AddFriend"">
         <div style=""display:flex;gap:0.5rem;"">
         <b>This is a custom template</b>
@@ -61,30 +65,39 @@ public partial class BitActionButtonDemo
         </div>
 </BitActionButton>";
 
-    private readonly string example6RazorCode = @"
-<EditForm Model=""validationButtonModel"" OnValidSubmit=""HandleValidSubmit"">
-    <DataAnnotationsValidator />
+    private readonly string example7RazorCode = @"
+@if (formIsValidSubmit is false)
+{
+    <EditForm Model=""buttonValidationModel"" OnValidSubmit=""HandleValidSubmit"" OnInvalidSubmit=""HandleInvalidSubmit"" novalidate>
+        <DataAnnotationsValidator />
 
-    <ValidationSummary />
+        <BitTextField Label=""Required"" Required @bind-Value=""buttonValidationModel.RequiredText"" />
+        <ValidationMessage For=""() => buttonValidationModel.RequiredText"" style=""color:red"" />
 
-    <BitTextField Label=""Required"" Required @bind-Value=""validationButtonModel.RequiredText"" />
-    <ValidationMessage For=""() => validationButtonModel.RequiredText"" style=""color:red"" />
+        <BitTextField Label=""Non-required"" @bind-Value=""buttonValidationModel.NonRequiredText"" />
+                    
+        <div>
+            <BitActionButton IconName=""@BitIconName.SendMirrored"" ButtonType=""BitButtonType.Submit"">
+                Submit
+            </BitActionButton>
 
-    <BitTextField Label=""Nonrequired"" @bind-Value=""validationButtonModel.NonRequiredText"" />
+            <BitActionButton IconName=""@BitIconName.Reset"" ButtonType=""BitButtonType.Reset"">
+                Reset
+            </BitActionButton>
 
-    <div>
-        <BitActionButton IconName=""@BitIconName.SendMirrored"" ButtonType=""BitButtonType.Submit"">
-            Submit
-        </BitActionButton>
-        <BitActionButton IconName=""@BitIconName.Reset"" ButtonType=""BitButtonType.Reset"">
-            Reset
-        </BitActionButton>
-        <BitActionButton IconName=""@BitIconName.ButtonControl"" ButtonType=""BitButtonType.Button"">
-            Button
-        </BitActionButton>
-    </div>
-</EditForm>";
-    private readonly string example6CsharpCode = @"
+            <BitActionButton IconName=""@BitIconName.ButtonControl"" ButtonType=""BitButtonType.Button"">
+                Button
+            </BitActionButton>
+        </div>
+    </EditForm>
+}
+else
+{
+    <BitMessage Color=""BitColor.Success"">
+        The form submitted successfully.
+    </BitMessage>
+}";
+    private readonly string example7CsharpCode = @"
 public class ButtonValidationModel
 {
     [Required]
@@ -93,18 +106,28 @@ public class ButtonValidationModel
     public string? NonRequiredText { get; set; }
 }
 
-private ButtonValidationModel validationButtonModel = new();
+private bool formIsValidSubmit;
+private ButtonValidationModel buttonValidationModel = new();
 
 private async Task HandleValidSubmit()
 {
+    formIsValidSubmit = true;
+
     await Task.Delay(2000);
 
-    validationButtonModel = new();
+    buttonValidationModel = new();
+
+    formIsValidSubmit = false;
 
     StateHasChanged();
+}
+
+private void HandleInvalidSubmit()
+{
+    formIsValidSubmit = false;
 }";
 
-    private readonly string example7RazorCode = @"
+    private readonly string example8RazorCode = @"
 <BitActionButton FullWidth IconName=""@BitIconName.NavigationFlipper"">
     FullWidth
 </BitActionButton>
@@ -113,7 +136,7 @@ private async Task HandleValidSubmit()
     FullWidth with end icon
 </BitActionButton>";
 
-    private readonly string example8RazorCode = @"
+    private readonly string example9RazorCode = @"
 <BitToggle @bind-Value=""isLoading"" Label=""Toggle loading"" />
 
 <BitActionButton IsLoading=""isLoading"" IconName=""@BitIconName.Save"">
@@ -126,11 +149,52 @@ private async Task HandleValidSubmit()
 
 <BitActionButton IsLoading=""isLoading"" IconName=""@BitIconName.Send"" Color=""BitColor.Success"">
     Send message
-</BitActionButton>";
-    private readonly string example8CsharpCode = @"
-private bool isLoading;";
+</BitActionButton>
 
-    private readonly string example9RazorCode = @"
+<BitActionButton AutoLoading OnClick=""HandleAutoLoadingClick"" IconName=""@BitIconName.Save"">
+    AutoLoading
+</BitActionButton>
+
+<BitActionButton AutoLoading OnClick=""HandleAutoLoadingClick"" LoadingLabel=""Saving..."" IconName=""@BitIconName.Save"">
+    AutoLoading with LoadingLabel
+</BitActionButton>
+
+<BitActionButton AutoLoading OnClick=""HandleAutoLoadingClick"" LoadingDelay=""500"" IconName=""@BitIconName.Save"">
+    AutoLoading with LoadingDelay
+</BitActionButton>
+
+<BitActionButton AutoLoading OnClick=""HandleGuardedClick"" IconName=""@BitIconName.Shield"">
+    Guarded (@guardedClickCount)
+</BitActionButton>
+
+<BitActionButton AutoLoading Reclickable OnClick=""HandleReclickableClick"" IconName=""@BitIconName.RepeatAll"">
+    Reclickable (@reclickableClickCount)
+</BitActionButton>";
+    private readonly string example9CsharpCode = @"
+private bool isLoading;
+private int guardedClickCount;
+private int reclickableClickCount;
+
+private async Task HandleAutoLoadingClick()
+{
+    await Task.Delay(2000);
+}
+
+private async Task HandleGuardedClick()
+{
+    guardedClickCount++;
+
+    await Task.Delay(2000);
+}
+
+private async Task HandleReclickableClick()
+{
+    reclickableClickCount++;
+
+    await Task.Delay(2000);
+}";
+
+    private readonly string example10RazorCode = @"
 <BitToggle @bind-Value=""templateIsLoading"" Label=""Toggle loading"" />
 
 <BitActionButton IsLoading=""templateIsLoading"" IconName=""@BitIconName.Download"">
@@ -141,10 +205,10 @@ private bool isLoading;";
         <BitRingLoading CustomSize=""20"" Color=""BitColor.Tertiary"" /> Downloading...
     </LoadingTemplate>
 </BitActionButton>";
-    private readonly string example9CsharpCode = @"
+    private readonly string example10CsharpCode = @"
 private bool templateIsLoading;";
 
-    private readonly string example10RazorCode = @"
+    private readonly string example11RazorCode = @"
 <BitActionButton Underlined IconName=""@BitIconName.Link"">
     Link style
 </BitActionButton>
@@ -157,7 +221,7 @@ private bool templateIsLoading;";
     More info
 </BitActionButton>";
 
-    private readonly string example11RazorCode = @"
+    private readonly string example12RazorCode = @"
 <BitActionButton Color=""BitColor.Primary"" IconName=""@BitIconName.ColorSolid"">
     Primary
 </BitActionButton>
@@ -277,7 +341,7 @@ private bool templateIsLoading;";
     TertiaryBorder
 </BitActionButton>";
 
-    private readonly string example12RazorCode = @"
+    private readonly string example13RazorCode = @"
 <link rel=""stylesheet"" href=""https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css"" />
 
 <BitActionButton Icon=""@(""fa-solid fa-house"")"">
@@ -315,7 +379,7 @@ private bool templateIsLoading;";
     Gear (Icon=""@@BitIconInfo.Bi(""gear-fill"")"")
 </BitActionButton>";
 
-    private readonly string example13RazorCode = @"
+    private readonly string example14RazorCode = @"
 <BitActionButton Size=""BitSize.Small"" IconName=""@BitIconName.FontSize"">
     Small
 </BitActionButton>
@@ -328,7 +392,45 @@ private bool templateIsLoading;";
     Large
 </BitActionButton>";
 
-    private readonly string example14RazorCode = @"
+    private readonly string example15RazorCode = @"
+<BitActionButton OnClick=""() => clickCounter++"" IconName=""@BitIconName.TouchPointer"">
+    Click me (@clickCounter)
+</BitActionButton>
+
+
+<div class=""clickable-row"" @onclick=""() => rowClickCount++"">
+    <span>Row clicks: @rowClickCount | Button clicks: @innerClickCount</span>
+
+    <BitActionButton OnClick=""() => innerClickCount++"" IconName=""@BitIconName.Edit"">
+        Bubbles up
+    </BitActionButton>
+
+    <BitActionButton StopPropagation OnClick=""() => innerClickCount++"" IconName=""@BitIconName.Edit"">
+        StopPropagation
+    </BitActionButton>
+</div>";
+    private readonly string example15CsharpCode = @"
+private int clickCounter;
+private int rowClickCount;
+private int innerClickCount;";
+
+    private readonly string example16RazorCode = @"
+<BitActionButton Title=""Save your changes"" IconName=""@BitIconName.Save"">
+    Hover me
+</BitActionButton>
+
+<BitActionButton IconOnly Title=""Delete"" AriaLabel=""Delete"" Color=""BitColor.Error"" IconName=""@BitIconName.Delete"" />";
+
+    private readonly string example17RazorCode = @"
+<BitActionButton IsEnabled=""false"" IconName=""@BitIconName.Blocked"">
+    Disabled (skipped by Tab)
+</BitActionButton>
+
+<BitActionButton IsEnabled=""false"" AllowDisabledFocus IconName=""@BitIconName.Blocked"">
+    Disabled (still focusable)
+</BitActionButton>";
+
+    private readonly string example18RazorCode = @"
 <style>
     .custom-icon {
         color: hotpink;
@@ -373,7 +475,7 @@ private bool templateIsLoading;";
     Action Button Classes (Hover me)
 </BitActionButton>";
 
-    private readonly string example15RazorCode = @"
+    private readonly string example19RazorCode = @"
 <BitActionButton Dir=""BitDir.Rtl"" IconName=""@BitIconName.AddFriend"">
     ساخت حساب
 </BitActionButton>";

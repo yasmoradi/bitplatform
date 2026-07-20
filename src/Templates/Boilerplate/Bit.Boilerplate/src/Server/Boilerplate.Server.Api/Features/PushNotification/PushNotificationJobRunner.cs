@@ -1,4 +1,4 @@
-﻿//+:cnd:noEmit
+//+:cnd:noEmit
 using AdsPush;
 using AdsPush.Abstraction;
 using System.Collections.Concurrent;
@@ -17,7 +17,7 @@ public partial class PushNotificationJobRunner
 {
     [AutoInject] private AppDbContext dbContext = default!;
     [AutoInject] private IAdsPushSender adsPushSender = default!;
-    [AutoInject] private ServerExceptionHandler serverExceptionHandler = default!;
+    [AutoInject] private ApiServerExceptionHandler serverExceptionHandler = default!;
     //#if (signalR == true)
     [AutoInject] private IHubContext<AppHub> hubContext = default!;
     //#endif
@@ -72,7 +72,7 @@ public partial class PushNotificationJobRunner
                 var target = subscription.Platform is "browser" ? AdsPushTarget.BrowserAndPwa
                                     : subscription.Platform is "fcmV1" ? AdsPushTarget.Android
                                     : subscription.Platform is "apns" ? AdsPushTarget.Ios
-                                    : throw new NotImplementedException();
+                                    : throw new NotImplementedException($"Platform {subscription.Platform} is not supported.");
 
                 await adsPushSender.BasicSendAsync(target, subscription.PushChannel, payload, default);
 

@@ -1,14 +1,16 @@
-﻿//+:cnd:noEmit
+//+:cnd:noEmit
 using System.ComponentModel;
 //#if (module == "Sales")
 using Boilerplate.Server.Api.Features.Products;
 //#endif
 using ModelContextProtocol.Server;
 using Microsoft.AspNetCore.SignalR;
+using Boilerplate.Shared;
 using Boilerplate.Shared.Features.Diagnostic;
 using Boilerplate.Server.Api.Features.Identity;
 using Boilerplate.Shared.Features.Identity.Dtos;
 using Boilerplate.Server.Api.Infrastructure.Services;
+using Microsoft.Agents.AI;
 
 namespace Boilerplate.Server.Api.Infrastructure.SignalR;
 
@@ -26,13 +28,13 @@ public partial class AppChatbot
         {
             var timeZone = TimeZoneInfo.FindSystemTimeZoneById(timeZoneId);
 
-            var userDateTime = TimeZoneInfo.ConvertTime(DateTimeOffset.UtcNow, timeZone);
+            var userDateTime = TimeZoneInfo.ConvertTime(timeProvider.GetUtcNow(), timeZone);
 
             return $"Current date/time in user's timezone ({timeZoneId}) is {userDateTime:o}";
         }
         catch
         {
-            return $"Current date/time in utc is {DateTimeOffset.UtcNow:o}";
+            return $"Current date/time in utc is {timeProvider.GetUtcNow():o}";
         }
     }
 
@@ -51,14 +53,14 @@ public partial class AppChatbot
 
             // Ideally, store these in a CRM or app database,
             // but for now, we'll log them!
-            scope.ServiceProvider.GetRequiredService<ILogger<IChatClient>>()
+            scope.ServiceProvider.GetRequiredService<ILogger<AIAgent>>()
                 .LogError("Chat reported issue: User email: {emailAddress}, Conversation history: {conversationHistory}", emailAddress, conversationHistory);
 
             return "User email and conversation history saved successfully.";
         }
         catch (Exception exp)
         {
-            serviceProvider.GetRequiredService<ServerExceptionHandler>().Handle(exp);
+            serviceProvider.GetRequiredService<ApiServerExceptionHandler>().Handle(exp);
             return "Failed to save user email and conversation history.";
         }
     }
@@ -66,7 +68,7 @@ public partial class AppChatbot
     /// <summary>
     /// Navigates the user to a specific page within the application.
     /// </summary>
-    [Description("Navigates the user to a specific page within the application. Use this tool when the user requests to go to a particular section or feature of the app.")]
+    [Description("Navigates the user to a specific page within the application. Use this tool only when the user explicitly requests to go to a particular section or feature of the app.")]
     [McpServerTool(Name = nameof(NavigateToPage))]
     private async Task<string?> NavigateToPage(
         [Required, Description("Page URL to navigate to")] string pageUrl)
@@ -85,9 +87,19 @@ public partial class AppChatbot
         }
         catch (Exception exp)
         {
-            serviceProvider.GetRequiredService<ServerExceptionHandler>().Handle(exp);
+            serviceProvider.GetRequiredService<ApiServerExceptionHandler>().Handle(exp);
             return "Navigation failed";
         }
+    }
+
+    /// <summary>
+    /// Returns the list of available application pages with their relative URLs and descriptions.
+    /// </summary>
+    [Description("Returns the list of available application pages, each with its relative URL and a short description. Call this tool whenever the user asks to find, open or navigate to a specific page/section of the app, then use the returned relative URL (e.g. /dashboard) with the NavigateToPage tool.")]
+    [McpServerTool(Name = nameof(GetAppPages))]
+    private object GetAppPages()
+    {
+        return PageUrls.GetPages();
     }
 
     [Description(@"Displays the sign-in modal to the user and waits for either successful sign-in or cancellation")]
@@ -115,7 +127,7 @@ public partial class AppChatbot
         }
         catch (Exception exp)
         {
-            serviceProvider.GetRequiredService<ServerExceptionHandler>().Handle(exp);
+            serviceProvider.GetRequiredService<ApiServerExceptionHandler>().Handle(exp);
             return null;
         }
     }
@@ -123,9 +135,9 @@ public partial class AppChatbot
     /// <summary>
     /// Changes the user's culture/language setting.
     /// </summary>
-    [Description("Changes the user's culture/language setting. Use this tool when the user requests to change the app language. Common LCIDs: 1033=en-US, 1065=fa-IR, 1053=sv-SE, 2057=en-GB, 1043=nl-NL, 1081=hi-IN, 2052=zh-CN, 3082=es-ES, 1036=fr-FR, 1025=ar-SA, 1031=de-DE.")]
-    [McpServerTool(Name = nameof(SetCulture))]
-    private async Task<string?> SetCulture(
+    [Description("Changes the user's culture/language setting. Use this tool only when the user explicitly requests to change the app language. Common LCIDs: 1033=en-US, 1065=fa-IR, 1053=sv-SE, 2057=en-GB, 1043=nl-NL, 1081=hi-IN, 2052=zh-CN, 3082=es-ES, 1036=fr-FR, 1025=ar-SA, 1031=de-DE.")]
+    [McpServerTool(Name = nameof(SetApplicationCulture))]
+    private async Task<string?> SetApplicationCulture(
         [Required, Description("Culture LCID (e.g., 1033 for en-US, 1065 for fa-IR)")] int cultureLcid)
     {
         await EnsureSignalRConnectionIdIsPresent();
@@ -147,7 +159,7 @@ public partial class AppChatbot
         }
         catch (Exception exp)
         {
-            serviceProvider.GetRequiredService<ServerExceptionHandler>().Handle(exp);
+            serviceProvider.GetRequiredService<ApiServerExceptionHandler>().Handle(exp);
             return "Failed to change culture/language";
         }
     }
@@ -155,9 +167,9 @@ public partial class AppChatbot
     /// <summary>
     /// Changes the user's theme preference between light and dark mode.
     /// </summary>
-    [Description("Changes the user's theme preference between light and dark mode. Use this tool when the user requests to change the app theme or appearance.")]
-    [McpServerTool(Name = nameof(SetTheme))]
-    private async Task<string?> SetTheme(
+    [Description("Changes the user's theme preference between light and dark mode. Use this tool only when the user explicitly requests to change the app theme or appearance.")]
+    [McpServerTool(Name = nameof(SetApplicationTheme))]
+    private async Task<string?> SetApplicationTheme(
         [Required, Description("Theme name: 'light' or 'dark'")] string theme)
     {
         await EnsureSignalRConnectionIdIsPresent();
@@ -169,15 +181,15 @@ public partial class AppChatbot
 
         try
         {
-            _ = await scope.ServiceProvider.GetRequiredService<IHubContext<AppHub>>()
+            var themeChanged = await scope.ServiceProvider.GetRequiredService<IHubContext<AppHub>>()
                 .Clients.Client(signalRConnectionId!)
                 .InvokeAsync<bool>(SharedAppMessages.CHANGE_THEME, theme, CancellationToken.None);
 
-            return $"Theme changed to {theme} successfully";
+            return themeChanged ? $"Theme changed to {theme} successfully" : $"Theme is already set to {theme}";
         }
         catch (Exception exp)
         {
-            serviceProvider.GetRequiredService<ServerExceptionHandler>().Handle(exp);
+            serviceProvider.GetRequiredService<ApiServerExceptionHandler>().Handle(exp);
             return "Failed to change theme";
         }
     }
@@ -206,7 +218,7 @@ public partial class AppChatbot
         }
         catch (Exception exp)
         {
-            serviceProvider.GetRequiredService<ServerExceptionHandler>().Handle(exp);
+            serviceProvider.GetRequiredService<ApiServerExceptionHandler>().Handle(exp);
             return "Failed to retrieve error information from the device.";
         }
     }
@@ -232,7 +244,7 @@ public partial class AppChatbot
         }
         catch (Exception exp)
         {
-            serviceProvider.GetRequiredService<ServerExceptionHandler>().Handle(exp);
+            serviceProvider.GetRequiredService<ApiServerExceptionHandler>().Handle(exp);
             return "Failed to clear app files on the device.";
         }
     }

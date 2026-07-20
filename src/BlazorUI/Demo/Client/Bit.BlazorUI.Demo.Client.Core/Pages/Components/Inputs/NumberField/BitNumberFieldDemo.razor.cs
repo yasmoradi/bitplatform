@@ -82,10 +82,10 @@ public partial class BitNumberFieldDemo
         },
         new()
         {
-            Name = "DefaultValue",
-            Type = "TValue?",
+            Name = "DigitsNormalizer",
+            Type = "Func<string?, string?>?",
             DefaultValue = "null",
-            Description = "Initial value of the number field.",
+            Description = "A custom function to normalize the raw input string before it gets parsed into the value. When provided, it takes precedence over NormalizeDigits and lets the developer plug in their own culture-specific or domain-specific transformation.",
         },
         new()
         {
@@ -210,6 +210,13 @@ public partial class BitNumberFieldDemo
             Description = "Determines how the spinning buttons should be rendered.",
             LinkType = LinkType.Link,
             Href = "#spinMode-enum",
+        },
+        new()
+        {
+            Name = "NormalizeDigits",
+            Type = "bool",
+            DefaultValue = "false",
+            Description = "Normalizes non-Latin (e.g. Persian \"۱۲۳\" or Arabic \"١٢٣\") decimal digits to their Latin (0-9) equivalents before parsing. This is culture-agnostic and works for any Unicode decimal digit system.",
         },
         new()
         {
@@ -590,6 +597,11 @@ public partial class BitNumberFieldDemo
 
     private int? classesValue;
 
+    private int? normalizeOffValue;
+    private int? normalizeOnValue;
+    private double? normalizeDecimalValue;
+    private int? customNormalizerValue;
+
     private int hideInputValue;
 
     private bool invertMouseWheel;
@@ -610,5 +622,23 @@ public partial class BitNumberFieldDemo
     private void HandleInvalidSubmit()
     {
         SuccessMessage = string.Empty;
+    }
+
+    // Custom normalizer: maps any Unicode decimal digit to its Latin equivalent
+    // and strips spaces and thousand separators (Latin ',' and Persian '٬').
+    private string? CustomDigitsNormalizer(string? value)
+    {
+        if (string.IsNullOrEmpty(value)) return value;
+
+        var sb = new System.Text.StringBuilder(value.Length);
+        foreach (var c in value)
+        {
+            if (c is ' ' or ',' or '٬') continue;
+
+            var digit = System.Globalization.CharUnicodeInfo.GetDecimalDigitValue(c);
+            sb.Append(digit >= 0 ? (char)('0' + digit) : c);
+        }
+
+        return sb.ToString();
     }
 }

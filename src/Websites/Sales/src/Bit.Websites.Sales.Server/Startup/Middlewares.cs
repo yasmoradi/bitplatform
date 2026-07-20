@@ -23,7 +23,7 @@ public class Middlewares
         {
             app.UseHttpsRedirection();
             app.UseResponseCompression();
-            
+
             app.UseSecurityHeaders();
         }
 
@@ -56,11 +56,8 @@ public class Middlewares
 
         app.UseExceptionHandler("/", createScopeForErrors: true);
 
-        if (env.IsProduction() is false)
-        {
-            app.UseSwagger();
-            app.UseSwaggerUI();
-        }
+        app.UseSwagger();
+        app.UseSwaggerUI();
 
         app.MapControllers();
 
@@ -94,7 +91,11 @@ public class Middlewares
             {
                 if (context.Request.Path.Value.Contains("not-found", StringComparison.InvariantCultureIgnoreCase))
                 {
-                    context.Response.StatusCode = (int)HttpStatusCode.NotFound;
+                    context.Response.OnStarting(() =>
+                    {
+                        context.Response.StatusCode = (int)HttpStatusCode.NotFound;
+                        return Task.CompletedTask;
+                    });
                 }
             }
 

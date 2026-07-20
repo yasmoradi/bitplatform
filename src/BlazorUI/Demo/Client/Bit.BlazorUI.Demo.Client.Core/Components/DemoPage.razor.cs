@@ -21,9 +21,9 @@ public partial class DemoPage
     [Parameter] public List<ComponentParameter> PublicMembers { get; set; } = [];
     [Parameter] public string? GitHubUrl { get; set; }
     [Parameter] public string? GitHubExtrasUrl { get; set; }
+    [Parameter] public string? GitHubLegacyUrl { get; set; }
     [Parameter] public string? GitHubDemoUrl { get; set; }
-
-
+    [CascadingParameter(Name = nameof(RenderForMcpClient))] public bool RenderForMcpClient { get; set; }
 
     private readonly List<ComponentParameter> _componentBaseParameters =
     [
@@ -175,11 +175,18 @@ public partial class DemoPage
 
     private readonly List<string> _inputComponents = [
         "Calendar", "Checkbox", "ChoiceGroup", "DatePicker", "DateRangePicker", "Dropdown", "NumberField", "OtpInput", "Rating",
-        "SearchBox", "TextField", "TimePicker", "CircularTimePicker", "Toggle"
+        "SearchBox", "TextField", "TimePicker", "CircularTimePicker", "Toggle", "TagsInput"
     ];
 
     private readonly List<ComponentParameter> _inputBaseParameters =
     [
+        new()
+        {
+            Name = "DefaultValue",
+            Type = "TValue?",
+            DefaultValue = "null",
+            Description = "The default value of the input to be used in uncontrolled mode (i.e. when the Value is not bound), typically used alongside the OnChange callback.",
+        },
         new()
         {
             Name = "DisplayName",
@@ -263,7 +270,7 @@ public partial class DemoPage
 
 
     private readonly List<string> _textInputComponents = [
-        "NumberField", "TextField", "SearchBox"
+        "NumberField", "TextField", "SearchBox", "PhoneInput"
     ];
 
     private readonly List<ComponentParameter> _textInputBaseParameters =
@@ -307,5 +314,7 @@ public partial class DemoPage
 
 
 
-    private readonly List<string> _notInheritedComponents = ["DataGrid", "Chart", "ModalService", "CascadingValueProvider", "Params"];
+    private readonly List<string> _notInheritedComponents = [
+        "CascadingValueProvider", "Chart", "DataGrid", "QuickGrid", "ModalService", "Params", "ProModalService"
+    ];
 }
