@@ -1,11 +1,10 @@
 using Boilerplate.Client.Core.Infrastructure.Services.Contracts;
 
-namespace Boilerplate.Tests.E2E.Features.Api;
+namespace Boilerplate.Tests.E2E.Features.Smoke;
 
 /// <summary>
-/// The browserless counterpart of the platform smoke tests: instead of opening an app, it calls the deployed APIs
-/// through the client's own typed controllers and reads what they wrote through <see cref="AppDbContext"/>, which
-/// doubles as the probe that <see cref="TestHost"/> is wired.
+/// The browserless smoke test: calls the deployed APIs through the client's own typed controllers and reads what they
+/// wrote, which doubles as the probe that <see cref="DeployedApiClientProvider"/> is wired.
 /// </summary>
 [TestClass, TestCategory(TestCategories.Api), Retry(2)]
 public partial class ApiSmokeTests
@@ -17,14 +16,9 @@ public partial class ApiSmokeTests
     public TestContext TestContext { get; set; } = default!;
 
     /// <summary>
-    /// The API's own write reaching its own database, per deployed API. Signing in makes the server insert a
-    /// UserSession row, and the row is then ours to read and delete straight through the db context - which only lines
-    /// up if the API and this host are looking at the same database, so every row also pins the deployments to the one
-    /// <c>postgresdb</c> they share.
-    /// <para>
-    /// Deleting the row is also the cleanup: this runs against live deployments, so a session left behind is a session
-    /// left signed in.
-    /// </para>
+    /// Signing in inserts a UserSession this host can then read and delete, which only lines up if the API and this
+    /// host share a database - so it also pins every deployment to the one <c>postgresdb</c>. The delete is the
+    /// cleanup: against a live deployment, a session left behind is a session left signed in.
     /// </summary>
     [TestMethod]
     [DataRow(App.Todo, DisplayName = nameof(App.Todo))]
@@ -34,14 +28,15 @@ public partial class ApiSmokeTests
     {
         var api = DeployedApps.ApiOf(app);
 
-        await using var scope = TestHost.CreateScope(api);
+        // Its own client for the http half, and the global one for the database half, which only that one holds.
+        await using var apiClient = DeployedApiClientProvider.CreateApiClientFor(api);
+        var globalApiClient = await DeployedApiClientProvider.GetGlobalApiClient(TestContext.CancellationToken);
 
-        var httpClient = scope.ServiceProvider.GetRequiredService<HttpClient>();
-        var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-        var identityController = scope.ServiceProvider.GetRequiredService<IIdentityController>();
+        var identityController = apiClient.Services.GetRequiredService<IIdentityController>();
+        await using var dbContext = await globalApiClient.DbContextFactory!.CreateDbContextAsync(TestContext.CancellationToken);
 
-        Assert.AreEqual(new Uri(api), httpClient.BaseAddress,
-            $"{nameof(TestHost.CreateScope)} is what aims the scope's http client, and every typed controller in it, at one API.");
+        Assert.AreEqual(new Uri(api), apiClient.HttpClient.BaseAddress,
+            $"{nameof(DeployedApiClientProvider.CreateApiClientFor)} is what aims the client's http client, and every typed controller beside it, at one API.");
 
         var signInResponse = await identityController.SignIn(new()
         {

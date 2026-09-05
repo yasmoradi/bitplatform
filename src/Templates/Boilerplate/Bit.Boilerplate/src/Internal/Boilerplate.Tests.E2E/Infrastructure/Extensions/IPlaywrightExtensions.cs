@@ -1,15 +1,15 @@
-namespace Boilerplate.Tests.E2E.Infrastructure;
+namespace Microsoft.Playwright;
 
 /// <summary>
 /// Launches an installed Blazor Hybrid app and attaches Playwright to its WebView over the Chrome DevTools Protocol,
-/// so the Windows (WebView2) and Android apps are driven exactly like a web page. The attached browser already holds
-/// the app's context and page, so use the session's <c>Page</c> instead of creating one.
+/// so the Windows (WebView2) and Android apps are driven exactly like a web page. Each launch hands back that page
+/// and the callback that stops what it started - hand the callback to <see cref="AppTestBase.RegisterForCleanup"/>.
 /// <para>
 /// A test machine is assumed to have the Windows apps installed through their Velopack setup and exactly one Android
 /// device/emulator connected with both Android apps installed - or a local AVD, whose first entry is booted here.
 /// </para>
 /// </summary>
-public static class HybridAppConnector
+public static class IPlaywrightExtensions
 {
     /// <summary>
     /// Generous, because a cold start includes Velopack's update check on Windows and WebView spin-up on Android.
@@ -24,7 +24,7 @@ public static class HybridAppConnector
         /// <c>--remote-debugging-port=9222</c>, so a leftover instance of any of them would be the one answering on
         /// the port - hence every running Client.Windows process is killed first.
         /// </summary>
-        public async Task<HybridAppSession> LaunchWindowsApp(string windowsAppId, int port = 9222)
+        public async Task<(IPage Page, Func<Task> OnStop)> LaunchWindowsApp(string windowsAppId, int port = 9222)
         {
             var exePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), windowsAppId, "current", $"{windowsAppId}.exe");
 
@@ -35,12 +35,12 @@ public static class HybridAppConnector
 
             Process.Start(new ProcessStartInfo(exePath) { UseShellExecute = true });
 
-            var browser = await ConnectWithRetry(playwright, $"http://localhost:{port}");
+            var browser = await playwright.ConnectWithRetry($"http://localhost:{port}");
 
-            return new HybridAppSession(browser, stopApp: () =>
+            return (browser.SinglePage(), async () =>
             {
+                await browser.CloseAsync();
                 StopWindowsApps();
-                return Task.CompletedTask;
             });
         }
 
@@ -50,7 +50,7 @@ public static class HybridAppConnector
         /// The WebView's CDP endpoint is an abstract socket on the device, so it is forwarded to
         /// <paramref name="localPort"/> first - not 9222, so an Android session can coexist with a Windows one.
         /// </summary>
-        public async Task<HybridAppSession> LaunchAndroidApp(string applicationId, int localPort = 9223)
+        public async Task<(IPage Page, Func<Task> OnStop)> LaunchAndroidApp(string applicationId, int localPort = 9223)
         {
             await EnsureAndroidDeviceOnline();
 
@@ -76,15 +76,74 @@ public static class HybridAppConnector
 
             await RunAdb($"forward tcp:{localPort} localabstract:webview_devtools_remote_{pid}");
 
-            var browser = await ConnectWithRetry(playwright, $"http://localhost:{localPort}");
+            var browser = await playwright.ConnectWithRetry($"http://localhost:{localPort}");
 
-            return new HybridAppSession(browser, stopApp: async () =>
+            return (browser.SinglePage(), async () =>
             {
+                await browser.CloseAsync();
                 await RunAdb($"forward --remove tcp:{localPort}", allowNonZeroExit: true);
                 await RunAdb($"shell am force-stop {applicationId}");
             });
         }
+
+        /// <summary>
+        /// Hands <paramref name="link"/> to Android as a VIEW intent, the way tapping it in a mail app would. No
+        /// package is named on purpose: what routes it into the app rather than into a browser is the app link
+        /// verification of MainActivity's IntentFilter host against its /.well-known/assetlinks.json.
+        /// </summary>
+        public async Task OpenAndroidAppLink(string link)
+        {
+            await EnsureAndroidDeviceOnline();
+
+            // Single quoted for the device's shell, which would otherwise cut a url at its first '&'.
+            var output = await RunAdb($"shell am start -a android.intent.action.VIEW -d '{link}'");
+
+            // am start reports an unresolved intent on stdout and still exits 0.
+            if (output.Contains("Error:", StringComparison.OrdinalIgnoreCase))
+                throw new InvalidOperationException($"Android did not open '{link}': {output.Trim()}");
+        }
+
+        /// <summary>
+        /// The CDP endpoint appears some time after the app process (and its page later still), so connecting is
+        /// retried until <see cref="connectDeadline"/>.
+        /// </summary>
+        private async Task<IBrowser> ConnectWithRetry(string cdpUrl)
+        {
+            var deadline = DateTimeOffset.UtcNow + connectDeadline;
+
+            while (true)
+            {
+                try
+                {
+                    var browser = await playwright.Chromium.ConnectOverCDPAsync(cdpUrl);
+
+                    if (browser.Contexts.SelectMany(c => c.Pages).Any())
+                    {
+                        foreach (var context in browser.Contexts)
+                            context.SetDefaultTimeout((float)TimeSpan.FromMinutes(1).TotalMilliseconds);
+
+                        return browser;
+                    }
+
+                    // Connected before the WebView opened its page; disconnect and try again.
+                    await browser.CloseAsync();
+                }
+                catch (PlaywrightException) when (DateTimeOffset.UtcNow < deadline)
+                {
+                }
+
+                if (DateTimeOffset.UtcNow >= deadline)
+                    throw new TimeoutException($"No CDP endpoint with a page appeared at {cdpUrl} within {connectDeadline}.");
+
+                await Task.Delay(TimeSpan.FromMilliseconds(500));
+            }
+        }
     }
+
+    /// <summary>A hybrid app shows exactly one page, and ConnectWithRetry only returns once it is there.</summary>
+    private static IPage SinglePage(this IBrowser browser)
+        => browser.Contexts.SelectMany(context => context.Pages).FirstOrDefault()
+           ?? throw new InvalidOperationException("The attached app exposes no page.");
 
     private static void StopWindowsApps()
     {
@@ -92,42 +151,6 @@ public static class HybridAppConnector
         {
             process.Kill(entireProcessTree: true);
             process.WaitForExit();
-        }
-    }
-
-    /// <summary>
-    /// The CDP endpoint appears some time after the app process (and its page later still), so connecting is retried
-    /// until <see cref="connectDeadline"/>.
-    /// </summary>
-    private static async Task<IBrowser> ConnectWithRetry(IPlaywright playwright, string cdpUrl)
-    {
-        var deadline = DateTimeOffset.UtcNow + connectDeadline;
-
-        while (true)
-        {
-            try
-            {
-                var browser = await playwright.Chromium.ConnectOverCDPAsync(cdpUrl);
-
-                if (browser.Contexts.SelectMany(c => c.Pages).Any())
-                {
-                    foreach (var context in browser.Contexts)
-                        context.SetDefaultTimeout((float)TimeSpan.FromMinutes(1).TotalMilliseconds);
-
-                    return browser;
-                }
-
-                // Connected before the WebView opened its page; disconnect and try again.
-                await browser.CloseAsync();
-            }
-            catch (PlaywrightException) when (DateTimeOffset.UtcNow < deadline)
-            {
-            }
-
-            if (DateTimeOffset.UtcNow >= deadline)
-                throw new TimeoutException($"No CDP endpoint with a page appeared at {cdpUrl} within {connectDeadline}.");
-
-            await Task.Delay(TimeSpan.FromMilliseconds(500));
         }
     }
 
@@ -256,21 +279,5 @@ public static class HybridAppConnector
             throw new InvalidOperationException($"{fileName} {arguments} failed ({process.ExitCode}): {error}");
 
         return output;
-    }
-}
-
-/// <summary>A running hybrid app with Playwright attached to its WebView; disposing disconnects and stops the app.</summary>
-public sealed class HybridAppSession(IBrowser browser, Func<Task> stopApp) : IAsyncDisposable
-{
-    public IBrowser Browser => browser;
-
-    /// <summary>The page the app is showing; a hybrid app has exactly one - drive this instead of creating one.</summary>
-    public IPage Page => browser.Contexts.SelectMany(c => c.Pages).FirstOrDefault()
-        ?? throw new InvalidOperationException("The attached app exposes no page (anymore).");
-
-    public async ValueTask DisposeAsync()
-    {
-        await browser.CloseAsync();
-        await stopApp();
     }
 }
