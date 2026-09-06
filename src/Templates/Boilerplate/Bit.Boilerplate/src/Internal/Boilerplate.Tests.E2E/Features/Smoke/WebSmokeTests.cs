@@ -1,6 +1,6 @@
-using Boilerplate.Tests.E2E.Features.Core;
+using Boilerplate.Tests.E2E.Infrastructure.Services;
 
-namespace Boilerplate.Tests.E2E.Features.Web;
+namespace Boilerplate.Tests.E2E.Features.Smoke;
 
 [TestClass, TestCategory(TestCategories.Web), Retry(2)]
 public partial class WebSmokeTests : SmokeTestsBase
@@ -15,8 +15,5 @@ public partial class WebSmokeTests : SmokeTestsBase
     [DataRow(App.TodoOffline, DisplayName = nameof(App.TodoOffline))]
     [DataRow(App.AdminPanel, DisplayName = nameof(App.AdminPanel))]
     [DataRow(App.AdminPanelWasmStandalone, DisplayName = nameof(App.AdminPanelWasmStandalone))]
-    public override Task App_Should_BecomeInteractive(App app)
-    {
-        return base.App_Should_BecomeInteractive(app);
-    }
+    public override Task App_Should_BecomeInteractive(App app) => base.App_Should_BecomeInteractive(app);
 }

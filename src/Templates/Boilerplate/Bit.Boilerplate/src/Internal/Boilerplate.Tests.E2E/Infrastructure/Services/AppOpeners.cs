@@ -1,18 +1,18 @@
-namespace Boilerplate.Tests.E2E.Infrastructure;
+namespace Boilerplate.Tests.E2E.Infrastructure.Services;
 
 /// <summary>
 /// Turns an <see cref="App"/> into a live page: the web opener navigates the test's own page, the hybrid ones launch
 /// the installed app and attach over CDP. Null means no build on that platform, which
-/// <see cref="AppsTestBase.OpenApp"/> reports as inconclusive rather than failed.
+/// <see cref="AppTestBase.OpenApp"/> reports as inconclusive rather than failed.
 /// </summary>
 public interface IAppOpener
 {
-    Task<IPage?> TryOpen(AppsTestBase test, App app);
+    Task<IPage?> TryOpen(AppTestBase test, App app);
 }
 
 public sealed class WebAppOpener : IAppOpener
 {
-    public async Task<IPage?> TryOpen(AppsTestBase test, App app)
+    public async Task<IPage?> TryOpen(AppTestBase test, App app)
     {
         var url = app switch
         {
@@ -34,7 +34,7 @@ public sealed class WebAppOpener : IAppOpener
 
 public sealed class WindowsAppOpener : IAppOpener
 {
-    public async Task<IPage?> TryOpen(AppsTestBase test, App app)
+    public async Task<IPage?> TryOpen(AppTestBase test, App app)
     {
         var windowsAppId = app switch
         {
@@ -47,17 +47,17 @@ public sealed class WindowsAppOpener : IAppOpener
         if (windowsAppId is null)
             return null;
 
-        var session = await test.Playwright.LaunchWindowsApp(windowsAppId);
+        var (page, onStop) = await test.Playwright.LaunchWindowsApp(windowsAppId);
 
-        test.RegisterForCleanup(session);
+        test.RegisterForCleanup(onStop);
 
-        return session.Page;
+        return page;
     }
 }
 
 public sealed class AndroidAppOpener : IAppOpener
 {
-    public async Task<IPage?> TryOpen(AppsTestBase test, App app)
+    public async Task<IPage?> TryOpen(AppTestBase test, App app)
     {
         var applicationId = app switch
         {
@@ -69,10 +69,10 @@ public sealed class AndroidAppOpener : IAppOpener
         if (applicationId is null)
             return null;
 
-        var session = await test.Playwright.LaunchAndroidApp(applicationId);
+        var (page, onStop) = await test.Playwright.LaunchAndroidApp(applicationId);
 
-        test.RegisterForCleanup(session);
+        test.RegisterForCleanup(onStop);
 
-        return session.Page;
+        return page;
     }
 }
