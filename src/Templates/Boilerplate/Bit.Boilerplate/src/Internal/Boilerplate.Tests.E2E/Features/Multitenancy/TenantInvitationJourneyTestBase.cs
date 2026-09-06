@@ -128,7 +128,9 @@ public abstract class TenantInvitationJourneyTestBase : AppTestBase
     {
         var faDisplayName = CultureInfoManager.SupportedCultures.First(sc => sc.Culture.Name == "fa-IR").DisplayName;
 
-        await page.Locator(".menu-chevron").ClickAsync();
+        // The drop menu itself, not its chevron: AppMenu hides the chevron under 600px, which is every phone-sized
+        // hybrid WebView.
+        await page.Locator("header .bit-drm").First.ClickAsync();
         await page.GetByRole(AriaRole.Button, new() { Name = AppStrings.Language }).ClickAsync();
         await Expect(page.GetByText(AppStrings.SelectLanguage)).ToBeVisibleAsync();
         await page.GetByText(faDisplayName, new() { Exact = true }).ClickAsync();
@@ -273,7 +275,12 @@ public abstract class TenantInvitationJourneyTestBase : AppTestBase
         var userId = await db.Users.IgnoreQueryFilters()
             .Where(user => user.NormalizedEmail == normalized)
             .Select(user => user.Id)
-            .SingleAsync(CancellationToken.None);
+            .SingleOrDefaultAsync(CancellationToken.None);
+
+        // This runs in the journey's finally, so a run that failed before the sign-up has nothing to delete - and
+        // throwing here would replace the failure that is the reason to be here at all.
+        if (userId == default)
+            return;
 
         var sessionIds = await db.UserSessions.IgnoreQueryFilters()
             .Where(session => session.UserId == userId)

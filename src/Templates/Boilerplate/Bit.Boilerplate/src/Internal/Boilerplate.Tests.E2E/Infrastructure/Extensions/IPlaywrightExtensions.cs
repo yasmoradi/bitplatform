@@ -1,3 +1,5 @@
+using System.Runtime.InteropServices;
+
 namespace Microsoft.Playwright;
 
 /// <summary>
@@ -22,7 +24,8 @@ public static class IPlaywrightExtensions
         /// Starts the installed Client.Windows app identified by <paramref name="windowsAppId"/>
         /// (e.g. <see cref="DeployedApps.TodoWindowsAppId"/>) and attaches to it. Every Client.Windows app hard-codes
         /// <c>--remote-debugging-port=9222</c>, so a leftover instance of any of them would be the one answering on
-        /// the port - hence every running Client.Windows process is killed first.
+        /// the port - hence every running Client.Windows process is killed first. The app is started minimized and
+        /// then parked off-screen, so a run leaves the machine's screen alone (see <see cref="HideWindowsAppWindow"/>).
         /// </summary>
         public async Task<(IPage Page, Func<Task> OnStop)> LaunchWindowsApp(string windowsAppId, int port = 9222)
         {
@@ -33,7 +36,9 @@ public static class IPlaywrightExtensions
 
             StopWindowsApps();
 
-            Process.Start(new ProcessStartInfo(exePath) { UseShellExecute = true });
+            Process.Start(new ProcessStartInfo(exePath) { UseShellExecute = true, WindowStyle = ProcessWindowStyle.Minimized });
+
+            await HideWindowsAppWindow();
 
             var browser = await playwright.ConnectWithRetry($"http://localhost:{port}");
 
@@ -54,8 +59,11 @@ public static class IPlaywrightExtensions
         {
             await EnsureAndroidDeviceOnline();
 
-            // Force-stopped first so each session drives a freshly started app.
-            await RunAdb($"shell am force-stop {applicationId}");
+            // Cleared, not just force-stopped: the app keeps its access token in Android Preferences, which outlives
+            // both. A session inherited from an earlier run belongs to a user that run's cleanup has since deleted, so
+            // the app would boot straight into UpdateSession's ResourceNotFoundException. App link verification lives
+            // in the package manager rather than in app data, so OpenAndroidAppLink still routes into the app.
+            await RunAdb($"shell pm clear {applicationId}");
             await RunAdb($"shell monkey -p {applicationId} -c android.intent.category.LAUNCHER 1");
 
             var deadline = DateTimeOffset.UtcNow + connectDeadline;
@@ -76,9 +84,16 @@ public static class IPlaywrightExtensions
 
             await RunAdb($"forward tcp:{localPort} localabstract:webview_devtools_remote_{pid}");
 
-            var browser = await playwright.ConnectWithRetry($"http://localhost:{localPort}");
+            // Android's WebView has no default browser context, so it answers the Browser.setDownloadBehavior a plain
+            // connect sends with "Browser context management is not supported." NoDefaults drops that call (and the
+            // focus/media emulation next to it) - the same switch Playwright's own MCP server attaches to CDP with.
+            var browser = await playwright.ConnectWithRetry($"http://localhost:{localPort}", noDefaults: true);
 
-            return (browser.SinglePage(), async () =>
+            var page = browser.SinglePage();
+
+            await AnswerConsentBanner(page);
+
+            return (page, async () =>
             {
                 await browser.CloseAsync();
                 await RunAdb($"forward --remove tcp:{localPort}", allowNonZeroExit: true);
@@ -107,7 +122,7 @@ public static class IPlaywrightExtensions
         /// The CDP endpoint appears some time after the app process (and its page later still), so connecting is
         /// retried until <see cref="connectDeadline"/>.
         /// </summary>
-        private async Task<IBrowser> ConnectWithRetry(string cdpUrl)
+        private async Task<IBrowser> ConnectWithRetry(string cdpUrl, bool noDefaults = false)
         {
             var deadline = DateTimeOffset.UtcNow + connectDeadline;
 
@@ -115,7 +130,7 @@ public static class IPlaywrightExtensions
             {
                 try
                 {
-                    var browser = await playwright.Chromium.ConnectOverCDPAsync(cdpUrl);
+                    var browser = await playwright.Chromium.ConnectOverCDPAsync(cdpUrl, new() { NoDefaults = noDefaults });
 
                     if (browser.Contexts.SelectMany(c => c.Pages).Any())
                     {
@@ -140,19 +155,86 @@ public static class IPlaywrightExtensions
         }
     }
 
+    /// <summary>
+    /// Answers the consent banner of an app whose storage was just cleared - the same answer, and for the same
+    /// reason, as the init script AppPageTest seeds into the web contexts: unanswered, the banner covers the bottom
+    /// of every page, and its own Accept competes with the Accept the invitation journey is after. Refused rather
+    /// than granted, since no test has a use for what it asks about.
+    /// </summary>
+    private static async Task AnswerConsentBanner(IPage page)
+    {
+        // The app's only bottom panel (see WebAppDownloadSizeTests), and inside it the outline button is Reject -
+        // neither depends on the culture the app happens to be in.
+        var reject = page.Locator(".bit-pnl-cnt.bit-pnl-bottom.bit-pnl-opn .bit-btn-otl").First;
+
+        try
+        {
+            await reject.ClickAsync(new() { Timeout = (float)consentBannerDeadline.TotalMilliseconds });
+        }
+        catch (PlaywrightException)
+        {
+            // A build with nothing consent-worthy wired up never renders the banner at all.
+        }
+    }
+
+    /// <summary>As generous as <see cref="AppTestBase.WaitUntilInteractive"/>: the banner opens with the booted app.</summary>
+    private static readonly TimeSpan consentBannerDeadline = TimeSpan.FromMinutes(2);
+
     /// <summary>A hybrid app shows exactly one page, and ConnectWithRetry only returns once it is there.</summary>
     private static IPage SinglePage(this IBrowser browser)
         => browser.Contexts.SelectMany(context => context.Pages).FirstOrDefault()
            ?? throw new InvalidOperationException("The attached app exposes no page.");
 
+    /// <summary>
+    /// Gets the launched app's window out of the way, so a run does not take over the machine's screen. It is moved
+    /// off-screen rather than hidden or minimized: WebView2 stops producing frames for a window Windows considers
+    /// invisible, and those frames are exactly what Playwright's actionability checks wait for. Best effort - a
+    /// window that never shows up is the CDP connect's problem to report.
+    /// </summary>
+    private static async Task HideWindowsAppWindow()
+    {
+        var deadline = DateTimeOffset.UtcNow + connectDeadline;
+
+        while (DateTimeOffset.UtcNow < deadline)
+        {
+            var window = Process.GetProcesses().Where(IsWindowsApp)
+                .Select(process => process.MainWindowHandle)
+                .FirstOrDefault(handle => handle != IntPtr.Zero);
+
+            if (window != IntPtr.Zero)
+            {
+                // Restored first (without activating), because a maximized window ignores a move.
+                ShowWindow(window, SW_SHOWNOACTIVATE);
+                SetWindowPos(window, IntPtr.Zero, offScreenPosition, offScreenPosition, 0, 0, SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE);
+                return;
+            }
+
+            await Task.Delay(TimeSpan.FromMilliseconds(200));
+        }
+    }
+
     private static void StopWindowsApps()
     {
-        foreach (var process in Process.GetProcesses().Where(p => p.ProcessName.EndsWith(".Client.Windows", StringComparison.Ordinal)))
+        foreach (var process in Process.GetProcesses().Where(IsWindowsApp))
         {
             process.Kill(entireProcessTree: true);
             process.WaitForExit();
         }
     }
+
+    private static bool IsWindowsApp(Process process) => process.ProcessName.EndsWith(".Client.Windows", StringComparison.Ordinal);
+
+    /// <summary>Far outside every monitor - where Windows itself parks a minimized window.</summary>
+    private const int offScreenPosition = -32000;
+
+    private const int SW_SHOWNOACTIVATE = 4;
+    private const uint SWP_NOSIZE = 0x0001, SWP_NOZORDER = 0x0004, SWP_NOACTIVATE = 0x0010;
+
+    [DllImport("user32.dll")]
+    private static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
+
+    [DllImport("user32.dll")]
+    private static extern bool SetWindowPos(IntPtr hWnd, IntPtr hWndInsertAfter, int x, int y, int cx, int cy, uint flags);
 
     /// <summary>
     /// When adb sees no device, boots the first local AVD - and leaves it running, since the next session reuses it.

@@ -181,8 +181,9 @@ public static class DeployedApiClientProvider
 
             var dbContextFactory = sp.GetRequiredService<IDbContextFactory<AppDbContext>>();
             await using var db = await dbContextFactory.CreateDbContextAsync();
+            var normalizedEmail = email.ToUpperInvariant();
             var admin = await db.Users.IgnoreQueryFilters()
-                .SingleAsync(user => user.NormalizedEmail!.Equals(email, StringComparison.InvariantCultureIgnoreCase));
+                .SingleAsync(user => user.NormalizedEmail == normalizedEmail);
 
             var authenticatorKey = configuration["GlobalAdminAuthenticatorKey"]!;
 
