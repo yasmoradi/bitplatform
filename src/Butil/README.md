@@ -192,8 +192,20 @@ registering everything.
 | Service | What it wraps |
 | --- | --- |
 | `WebAuthn` | Passkeys: create credentials and verify assertions |
+| `Credentials` | The password and federated credential store behind `navigator.credentials` |
+| `FedCm` | Federated sign-in the browser mediates, without third-party cookies |
+| `WebOtp` | Autofill the one-time code out of an incoming SMS |
+| `DigitalCredentials` | Present a verifiable credential from the user's wallet |
 | `Permissions` | Query the state of any browser permission |
 | `Notification` | Request permission and show system notifications |
+
+### Commerce
+
+| Service | What it wraps |
+| --- | --- |
+| `PaymentRequest` | The browser's own payment sheet: show it, complete it, abort it |
+| `PaymentHandler` | Registering an installed app as a payment method other sites can pay through |
+| `DigitalGoods` | An app store's catalogue, purchases and entitlements inside an installed PWA |
 
 ### Media & speech
 
@@ -267,7 +279,8 @@ refuses come back as `false`/`null` rather than as exceptions where dismissal is
 ### Optional fast invoke
 
 On Blazor WebAssembly, the handful of APIs backed by genuinely synchronous JS functions -
-`LocalStorage`, `SessionStorage`, `Cookie`, `Console`, `Location` - can skip the async marshalling:
+`LocalStorage`, `SessionStorage`, `Cookie`, `Console`, `Location`, `History` - can skip the async
+marshalling:
 
 ```csharp
 BitButil.UseFastInvoke();
@@ -299,7 +312,7 @@ through such a literal, so the trimmed assembly is the exact list of modules the
 and replaces `bit-butil.js` with a bundle assembled from only those modules and their dependencies.
 Fingerprints, integrity hashes and compressed variants are computed from the new content. An app
 that injects `Clipboard`, `LocalStorage` and `Window` ships about 8 KB of JavaScript instead of the
-110 KB bundle. It is on by default only in a Blazor WebAssembly project - a standalone app or PWA - because
+191 KB bundle. It is on by default only in a Blazor WebAssembly project - a standalone app or PWA - because
 that is where the assembly being trimmed is the assembly calling the served JavaScript; a server that hosts
 a WebAssembly client keeps its own, full copy of the bundle (use lazy scripts there). The same property
 trims the other shape too: wherever the module files are published - a lazy-scripts app, or an app keeping

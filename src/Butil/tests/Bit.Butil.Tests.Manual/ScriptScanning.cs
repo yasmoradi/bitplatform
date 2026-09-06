@@ -9,9 +9,9 @@ namespace ButilTests.Manual;
 /// </summary>
 /// <remarks>
 /// <see cref="ScriptTrimming"/> checks the trimmed publish's signal - the interop identifiers ILLink leaves
-/// behind - against <see cref="ScriptTrimming.MustSurviveModules"/>, the modules
-/// <see cref="ConsumerComponent"/>'s injected services call. This file's ground truth is
-/// <see cref="ScriptTrimming.ScanReachableModules"/>: the same set plus the two the reference closure reaches
+/// behind - against <see cref="ScriptTrimming.MustSurviveModules"/>, the modules this project's own code
+/// calls. This file's ground truth is <see cref="ScriptTrimming.InjectedReferenceModules"/> and
+/// <see cref="ScriptTrimming.ScanReachableModules"/>: the same sets plus the two the reference closure reaches
 /// without the code calling them. That is the whole point - the map and the scan are meant to reach the same
 /// answer about the same code without ILLink having run, erring only towards <em>more</em>. If they ever
 /// diverge downwards, an untrimmed consumer publishes a bundle missing JavaScript their app calls, and finds
@@ -79,8 +79,8 @@ internal static class ScriptScanning
     /// <summary>
     /// The check this file exists for: the map, asked about exactly the classes
     /// <see cref="ConsumerComponent"/> injects, must answer what a reference closure over exactly that code
-    /// reaches - which is what ILLink concludes plus the two modules named in
-    /// <see cref="ScriptTrimming.ScanReachableModules"/>.
+    /// reaches - which is what ILLink concludes for those classes plus the two modules named in
+    /// <see cref="ScriptTrimming.InjectedReferenceModules"/>.
     /// </summary>
     /// <remarks>
     /// It is a real test of the closure and not a restatement of it. <c>LocalStorage</c> carries no interop
@@ -99,15 +99,16 @@ internal static class ScriptScanning
             foreach (var module in modules) actual.Add(module);
         }
 
-        Compare(checks, ScriptTrimming.ScanReachableModules, actual,
+        Compare(checks, ScriptTrimming.InjectedReferenceModules, actual,
             "the classes ConsumerComponent injects map to exactly the modules a reference closure over them reaches",
             missing => $"the map does not lead from any injected class to [{missing}], so an untrimmed publish would drop JavaScript the app calls",
             extra => $"the map leads to [{extra}], which nothing in this project reaches even by reference - the closure is following something it should not");
     }
 
     /// <summary>
-    /// The scan, over this harness's own assembly, has to reach the same set: it is the same classes, named
-    /// the way a consumer's assembly names them.
+    /// The scan, over this harness's own assembly, has to reach every module this project's code needs: the
+    /// injected classes named the way a consumer's assembly names them, plus the three services
+    /// <see cref="CancellationContract"/> constructs directly.
     /// </summary>
     private static void CheckScanFindsTheSameModules(ScriptBundling.Checks checks, ButilTypeModules map)
     {

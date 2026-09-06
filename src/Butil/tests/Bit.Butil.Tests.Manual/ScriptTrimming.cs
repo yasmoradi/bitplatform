@@ -21,12 +21,21 @@ namespace ButilTests.Manual;
 internal static class ScriptTrimming
 {
     /// <summary>
-    /// The modules a trimmed publish of this harness must end up calling - the JavaScript behind the services
-    /// <see cref="ConsumerComponent"/> uses (plus <c>events</c>, reached through <c>Window.SubscribeEvent</c>'s
-    /// internal <c>DomEventsInterop</c>). Dependencies (<c>butil</c>, <c>utils</c>) are added by the manifest,
-    /// not listed here, so this stays a statement about what the C# side calls.
+    /// The modules behind the services <see cref="ConsumerComponent"/> injects (plus <c>events</c>, reached
+    /// through <c>Window.SubscribeEvent</c>'s internal <c>DomEventsInterop</c>) - the answer the class-to-module
+    /// map has to give when asked about exactly those classes.
     /// </summary>
-    internal static readonly string[] MustSurviveModules = ["canvas", "clipboard", "cookie", "dom", "events", "geolocation", "storage", "streams", "webRtc", "window"];
+    internal static readonly string[] InjectedModules =
+        ["canvas", "clipboard", "cookie", "dom", "events", "geolocation", "storage", "streams", "webRtc", "window"];
+
+    /// <summary>
+    /// The modules a trimmed publish of this harness must end up calling: <see cref="InjectedModules"/> plus the
+    /// three <see cref="CancellationContract"/> reaches by constructing the services directly. Dependencies
+    /// (<c>butil</c>, <c>utils</c>) are added by the manifest, not listed here, so this stays a statement about
+    /// what the C# side calls.
+    /// </summary>
+    internal static readonly string[] MustSurviveModules =
+        [.. InjectedModules, "digitalCredentials", "fetch", "webOtp"];
 
     /// <summary>
     /// The same question asked of the <em>untrimmed</em> signals - the class-to-module map and the scan
@@ -40,6 +49,12 @@ internal static class ScriptTrimming
     /// bytes, while missing one breaks it in the browser - so the two lists are compared exactly and kept
     /// separately, rather than the check being loosened to a subset test that would stop noticing either.
     /// </remarks>
+    internal static readonly string[] InjectedReferenceModules = [.. InjectedModules, "abortController", "mediaDevices"];
+
+    /// <summary>
+    /// The same closure taken over this harness's whole assembly rather than over the injected classes alone,
+    /// so it also carries the three services <see cref="CancellationContract"/> constructs directly.
+    /// </summary>
     internal static readonly string[] ScanReachableModules = [.. MustSurviveModules, "abortController", "mediaDevices"];
 
     /// <summary>
@@ -47,7 +62,7 @@ internal static class ScriptTrimming
     /// another module. Anything else in the manifest that nothing calls is an orphan: JavaScript shipped
     /// for an API that no longer exists on the C# side.
     /// </summary>
-    private static readonly string[] DependencyOnlyModules = ["butil", "utils"];
+    private static readonly string[] DependencyOnlyModules = ["abortable", "butil", "utils"];
 
     public sealed record Report(
         string[] Referenced,
